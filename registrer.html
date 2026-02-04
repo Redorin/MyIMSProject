@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Campus Safe Space</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="brand-header">
+                <i class="fas fa-user-plus fa-3x"></i>
+                <h1>Create Account</h1>
+                <p>Join the Campus IMS</p>
+            </div>
+            
+            <form id="registerForm">
+                <div class="input-group">
+                    <label>Full Name</label>
+                    <input type="text" id="regName" placeholder="John Doe" required>
+                </div>
+                
+                <div class="input-group">
+                    <label>Email Address</label>
+                    <input type="email" id="regEmail" placeholder="student@campus.edu" required>
+                </div>
+                
+                <div class="input-group">
+                    <label>Password</label>
+                    <input type="password" id="regPassword" placeholder="Minimum 8 characters" required minlength="8">
+                </div>
+                
+                <button type="submit" class="btn-primary">Sign Up</button>
+            </form>
+
+            <p id="regMessage" style="color: red; text-align: center; display: none; margin-top: 10px;"></p>
+
+            <div class="auth-footer">
+                <p>Already have an account? <a href="index.html">Login here</a></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://127.0.0.1:8000/api';
+
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const name = document.getElementById('regName').value;
+            const email = document.getElementById('regEmail').value;
+            const password = document.getElementById('regPassword').value;
+            const msgBox = document.getElementById('regMessage');
+
+            try {
+                // Send data to Laravel Backend
+                const response = await fetch(`${API_URL}/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ name, email, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // SUCCESS!
+                    alert('Account created successfully! Redirecting to dashboard...');
+                    
+                    // Save the token so they are logged in immediately
+                    localStorage.setItem('auth_token', data.access_token);
+                    localStorage.setItem('user_name', data.user ? data.user.name : name);
+                    
+                    // Send to dashboard
+                    window.location.href = 'dashboard.html';
+                } else {
+                    // FAIL (e.g., Email already taken)
+                    msgBox.style.display = 'block';
+                    msgBox.style.color = 'red';
+                    msgBox.innerText = data.message || 'Registration failed.';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                msgBox.style.display = 'block';
+                msgBox.innerText = 'Server error. Is the backend running?';
+            }
+        });
+    </script>
+</body>
+</html>

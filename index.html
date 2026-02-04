@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campus Safe Space IMS - Login</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="brand-header">
+                <i class="fas fa-shield-alt fa-3x"></i>
+                <h1>Campus Safe Space</h1>
+                <p>Real-time occupancy & safety monitoring</p>
+            </div>
+            
+            <form id="loginForm">
+    <div class="input-group">
+        <label>Email Address</label>
+        <input type="email" id="email" placeholder="student@campus.edu" required>
+    </div>
+    <div class="input-group">
+        <label>Password</label>
+        <input type="password" id="password" placeholder="••••••••" required>
+    </div>
+    <button type="submit" class="btn-primary">Login</button>
+</form>
+<p id="errorMessage" style="color: red; text-align: center; display: none;"></p>
+
+            <div class="auth-footer">
+                <p>Don't have an account? <a href="registrer.html">Register here</a></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    const API_URL = 'http://127.0.0.1:8000/api';
+
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        e.preventDefault(); // Stop page refresh
+
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const errorMsg = document.getElementById('errorMessage');
+
+        try {
+            const response = await fetch(`${API_URL}/login`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ email, password })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                // SUCCESS: Save the token and redirect
+                localStorage.setItem('auth_token', data.access_token);
+                localStorage.setItem('user_name', data.user.name);
+                
+                // Simple role check (You can improve this later)
+                if (email.includes('admin')) {
+                    window.location.href = 'admin.html';
+                } else {
+                    window.location.href = 'dashboard.html';
+                }
+            } else {
+                // ERROR: Show message
+                errorMsg.style.display = 'block';
+                errorMsg.textContent = data.message || 'Login failed';
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            errorMsg.style.display = 'block';
+            errorMsg.textContent = 'Server error. Is the backend running?';
+        }
+    });
+</script>
+</body>
+</html>

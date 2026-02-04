@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Panel - Campus IMS</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <nav class="navbar" style="background-color: #343a40;"> <div class="logo">IMS Admin Console</div>
+        <div class="user-menu">
+            <span>Admin Access</span>
+            <button onclick="logout()" style="background:none; border:none; color:white; cursor:pointer;">Logout</button>
+        </div>
+        <button onclick="logout()" style="background: none; border: 1px solid white; color: white; padding: 5px 10px; cursor: pointer; border-radius: 4px;">
+    Logout <i class="fas fa-sign-out-alt"></i>
+</button>
+    </nav>
+
+    <div class="container">
+        <h2>Campus Area Management</h2>
+        
+        <div class="card">
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="text-align: left; border-bottom: 2px solid #eee;">
+                        <th style="padding: 10px;">Area Name</th>
+                        <th style="padding: 10px;">Current Occupancy</th>
+                        <th style="padding: 10px;">Capacity</th>
+                        <th style="padding: 10px;">Status</th>
+                        <th style="padding: 10px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="adminTableBody">
+                    </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>

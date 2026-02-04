@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Safe Space IMS</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="nav-brand">
+            <i class="fas fa-shield-alt"></i> SafeSpace IMS
+        </div>
+        <div class="nav-user">
+            <span>Welcome, <strong>Student</strong></span>
+            <button class="btn-sm">Logout</button>
+        </div>
+    </nav>
+
+    <div class="main-content">
+        
+        <section class="control-panel">
+            <div class="status-card">
+                <div class="status-text">
+                    <h3>Your Status: <span class="status-active">Active</span></h3>
+                    <p>You are sharing your location to help others find safe spaces.</p>
+                </div>
+                <div class="toggle-switch">
+                    <label class="switch">
+                        <input type="checkbox" checked>
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+            </div>
+        </section>
+
+        <div class="dashboard-grid">
+            
+            <section class="map-section">
+                <h2><i class="fas fa-map"></i> Campus Map</h2>
+                <div class="map-container">
+                    <div class="campus-zone zone-library" data-occupancy="low">
+                        <span>Library</span>
+                        <small>Quiet</small>
+                    </div>
+                    <div class="campus-zone zone-canteen" data-occupancy="high">
+                        <span>Canteen</span>
+                        <small>Crowded</small>
+                    </div>
+                    <div class="campus-zone zone-gym" data-occupancy="medium">
+                        <span>Gymnasium</span>
+                        <small>Moderate</small>
+                    </div>
+                    <div class="campus-zone zone-park" data-occupancy="low">
+                        <span>Study Park</span>
+                        <small>Safe</small>
+                    </div>
+                </div>
+            </section>
+
+            <section class="list-section">
+                <h2>Real-Time Occupancy</h2>
+                <div class="occupancy-list">
+                    <div class="zone-card">
+                        <div class="zone-info">
+                            <h4>University Library</h4>
+                            <p>Capacity: 15/100</p>
+                        </div>
+                        <span class="badge badge-green">Low Traffic</span>
+                    </div>
+                    <div class="zone-card">
+                        <div class="zone-info">
+                            <h4>Main Canteen</h4>
+                            <p>Capacity: 85/100</p>
+                        </div>
+                        <span class="badge badge-red">High Traffic</span>
+                    </div>
+                    <div class="zone-card">
+                        <div class="zone-info">
+                            <h4>Student Center</h4>
+                            <p>Capacity: 45/100</p>
+                        </div>
+                        <span class="badge badge-yellow">Moderate</span>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
