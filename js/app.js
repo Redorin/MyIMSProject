@@ -85,6 +85,46 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    // --- USER MENU UPDATE ---
+    // Update the top-right user name/email across pages.
+    async function updateUserMenu() {
+        const nameEls = document.querySelectorAll('.user-name');
+        const emailEls = document.querySelectorAll('.user-email');
+        let name = localStorage.getItem('user_name') || '';
+        let email = localStorage.getItem('user_email') || '';
+        const token = localStorage.getItem('auth_token');
+
+        if (token) {
+            try {
+                const resp = await fetch('http://127.0.0.1:8000/api/profile', {
+                    headers: {
+                        'Accept': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    }
+                });
+                if (resp.ok) {
+                    const data = await resp.json();
+                    const user = data.user || data;
+                    if (user) {
+                        if (user.name) { name = user.name; localStorage.setItem('user_name', name); }
+                        if (user.email) { email = user.email; localStorage.setItem('user_email', email); }
+                    }
+                }
+            } catch (err) {
+                console.warn('Failed to refresh profile:', err);
+            }
+        }
+
+        nameEls.forEach(el => { if (name) el.textContent = name; });
+        emailEls.forEach(el => { if (email) el.textContent = email; });
+    }
+
+    // Expose for other pages/scripts (e.g., settings page) to call after updates
+    window.updateUserMenu = updateUserMenu;
+
+    // Run once on load to sync header labels
+    updateUserMenu();
+
     // Handle save buttons
     const saveBtns = document.querySelectorAll('.form-actions .btn-primary');
     saveBtns.forEach(btn => {
