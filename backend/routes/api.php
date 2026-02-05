@@ -19,6 +19,10 @@ Route::post('/login', [AuthController::class, 'login']);
 // Protected Routes (Login required)
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
+    // Profile routes
+    Route::get('/profile', [AuthController::class, 'profile']);
+    Route::put('/profile', [AuthController::class, 'updateProfile']);
+    Route::put('/profile/password', [AuthController::class, 'changePassword']);
     // You can move your '/spaces' route here later if you want it private!
     
     // Admin routes

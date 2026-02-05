@@ -7,6 +7,16 @@
     --red: #ef4444;
 }
 
+/* Dark theme overrides when document element has data-theme="dark" */
+[data-theme="dark"] {
+    --primary: #60a5fa;
+    --dark: #e6eef8;
+    --light: #071022;
+    --green: #16a34a;
+    --yellow: #d97706;
+    --red: #f87171;
+}
+
 * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
 
 body { background-color: var(--light); color: var(--dark); }

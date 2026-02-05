@@ -4,8 +4,12 @@ const API_URL = 'http://127.0.0.1:8000/api/spaces';
 // --- UTILITY FUNCTIONS ---
 // Logout function
 window.logout = function() {
-    localStorage.removeItem('user');
-    localStorage.removeItem('token');
+    // Clear all possible stored auth keys
+    try { localStorage.removeItem('auth_token'); } catch(e){}
+    try { localStorage.removeItem('user_name'); } catch(e){}
+    try { localStorage.removeItem('user_email'); } catch(e){}
+    try { localStorage.removeItem('token'); } catch(e){}
+    try { localStorage.removeItem('user'); } catch(e){}
     sessionStorage.clear();
     window.location.href = 'index.html';
 };

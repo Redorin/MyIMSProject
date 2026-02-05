@@ -452,7 +452,7 @@
                             <tr>
                                 <th>Space Name</th>
                                 <th>Occupancy</th>
-                                <th>Capacity</th>
+                                <th>Occupancy %</th>
                                 <th>Status</th>
                             </tr>
                         </thead>
@@ -476,7 +476,7 @@
                             <tr>
                                 <th>Space Name</th>
                                 <th>Occupancy</th>
-                                <th>Capacity</th>
+                                <th>Occupancy %</th>
                                 <th>Status</th>
                                 <th>Actions</th>
                             </tr>
@@ -613,8 +613,8 @@
                     spacesBody.innerHTML = spaces.map(space => `
                         <tr>
                             <td>${space.name}</td>
-                            <td>${space.occupancy}</td>
-                            <td>${space.capacity}</td>
+                            <td>${space.occupancy} / ${space.capacity}</td>
+                            <td>${space.occupancy_percentage}%</td>
                             <td><span class="capacity-badge ${space.status}">${space.status.toUpperCase()}</span></td>
                         </tr>
                     `).join('');
@@ -645,8 +645,8 @@
                     tbody.innerHTML = spaces.map(space => `
                         <tr>
                             <td>${space.name}</td>
-                            <td>${space.occupancy}</td>
-                            <td>${space.capacity}</td>
+                            <td>${space.occupancy} / ${space.capacity}</td>
+                            <td>${space.occupancy_percentage}%</td>
                             <td><span class="capacity-badge ${space.status}">${space.status.toUpperCase()}</span></td>
                             <td>
                                 <button class="btn-sm btn-delete" onclick="deleteSpace(${space.id})">

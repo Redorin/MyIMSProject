@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
 {
@@ -70,5 +71,51 @@ class AuthController extends Controller
     {
         $request->user()->currentAccessToken()->delete();
         return response()->json(['message' => 'Logged out successfully']);
+    }
+
+    // 4. PROFILE (Get current user)
+    public function profile(Request $request)
+    {
+        return response()->json($request->user());
+    }
+
+    // 5. UPDATE PROFILE (name, email, phone)
+    public function updateProfile(Request $request)
+    {
+        $user = $request->user();
+
+        $rules = [
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255|unique:users,email,' . $user->id,
+            'phone' => 'nullable|string|max:30',
+            'preferences' => 'nullable|array',
+        ];
+
+        $validated = $request->validate($rules);
+
+        // If preferences present, merge them into validated so mass assignment will save
+        $user->update($validated);
+
+        return response()->json(['message' => 'Profile updated', 'user' => $user]);
+    }
+
+    // 6. CHANGE PASSWORD
+    public function changePassword(Request $request)
+    {
+        $request->validate([
+            'current_password' => 'required',
+            'new_password' => 'required|string|min:8|confirmed',
+        ]);
+
+        $user = $request->user();
+
+        if (! Hash::check($request->current_password, $user->password)) {
+            return response()->json(['message' => 'Current password is incorrect'], 422);
+        }
+
+        $user->password = Hash::make($request->new_password);
+        $user->save();
+
+        return response()->json(['message' => 'Password changed successfully']);
     }
 }
