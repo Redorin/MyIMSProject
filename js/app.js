@@ -318,4 +318,24 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- START THE ENGINE ---
     fetchSpaces(); // Run once immediately
     setInterval(fetchSpaces, 5000); // Run every 5 seconds
+
+    // Listen for cross-tab notifications using BroadcastChannel
+    try {
+        const spacesChannel = new BroadcastChannel('campus_spaces');
+        spacesChannel.onmessage = (event) => {
+            if (event.data && event.data.type === 'spaces_updated') {
+                console.log('Spaces updated from admin, refreshing...');
+                try { fetchSpaces(); } catch(err) { console.warn('Failed to refresh on BroadcastChannel', err); }
+            }
+        };
+    } catch(err) {
+        console.warn('BroadcastChannel not supported, falling back to storage events', err);
+        // Fallback: listen to storage events
+        window.addEventListener('storage', (e) => {
+            if (!e) return;
+            if (e.key === 'spaces_updated_at') {
+                try { fetchSpaces(); } catch (err) { console.warn('Failed to refresh on storage event', err); }
+            }
+        });
+    }
 });

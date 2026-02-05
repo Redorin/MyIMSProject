@@ -25,13 +25,17 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const res = await fetch(API_URL);
             const spaces = await res.json();
+            console.log('Dashboard fetched spaces:', spaces.length, 'items');
             if (document.getElementById('spacesGrid')) renderSpacesGrid(spaces);
             if (document.querySelector('.spaces-list')) renderMapSpacesList(spaces);
         } catch(e) { console.error('Fetch error', e); }
     }
 
     function renderSpacesGrid(spaces) {
-        const grid = document.getElementById('spacesGrid'); if (!grid) return; grid.innerHTML = '';
+        const grid = document.getElementById('spacesGrid');
+        if (!grid) return;
+        console.log('Rendering spacesGrid with', spaces.length, 'spaces');
+        grid.innerHTML = '';
         spaces.forEach(space => {
             const percentage = space.capacity ? Math.round((space.occupancy / space.capacity) * 100) : 0;
             let status = (space.status || '').toString().toLowerCase();
@@ -71,4 +75,26 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     fetchSpaces(); setInterval(fetchSpaces, 5000);
+
+    // Refresh when another window notifies of changes (e.g., admin added a space)
+    // Use BroadcastChannel for real-time cross-tab notification
+    try {
+        const spacesChannel = new BroadcastChannel('campus_spaces');
+        spacesChannel.onmessage = (event) => {
+            console.log('Dashboard received BroadcastChannel message:', event.data);
+            if (event.data && event.data.type === 'spaces_updated') {
+                console.log('Spaces updated from admin, refreshing dashboard...');
+                try { fetchSpaces(); } catch(err) { console.warn('Failed to refresh on BroadcastChannel', err); }
+            }
+        };
+    } catch(err) {
+        console.warn('BroadcastChannel not supported, falling back to storage events', err);
+        // Fallback: listen to storage events
+        window.addEventListener('storage', (e) => {
+            if (!e) return;
+            if (e.key === 'spaces_updated_at') {
+                try { fetchSpaces(); } catch(err) { console.warn('Failed to refresh on storage event', err); }
+            }
+        });
+    }
 });

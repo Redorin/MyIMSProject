@@ -41,11 +41,15 @@ class AdminController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'capacity' => 'required|integer|min:1',
-            'occupancy' => 'required|integer|min:0',
-            'status' => 'required|in:low,medium,high',
         ]);
 
-        $space = Space::create($validated);
+        // Set occupancy to 0 and status will be calculated by the Space model
+        $space = Space::create([
+            'name' => $validated['name'],
+            'capacity' => $validated['capacity'],
+            'occupancy' => 0,
+            'status' => 'low',
+        ]);
 
         // Log the action
         ActivityLog::create([

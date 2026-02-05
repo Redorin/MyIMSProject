@@ -453,7 +453,6 @@
                                 <th>Space Name</th>
                                 <th>Occupancy</th>
                                 <th>Occupancy %</th>
-                                <th>Status</th>
                             </tr>
                         </thead>
                         <tbody id="dashboardSpacesBody">
@@ -477,7 +476,6 @@
                                 <th>Space Name</th>
                                 <th>Occupancy</th>
                                 <th>Occupancy %</th>
-                                <th>Status</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -536,18 +534,7 @@
                     <label>Capacity</label>
                     <input type="number" id="spaceCapacity" min="1" required>
                 </div>
-                <div class="form-group">
-                    <label>Current Occupancy</label>
-                    <input type="number" id="spaceOccupancy" min="0" required>
-                </div>
-                <div class="form-group">
-                    <label>Status</label>
-                    <select id="spaceStatus" required>
-                        <option value="low">Low</option>
-                        <option value="medium">Medium</option>
-                        <option value="high">High</option>
-                    </select>
-                </div>
+                <!-- occupancy and status are managed automatically; admin provides only name and capacity -->
                 <div class="modal-footer">
                     <button type="button" class="btn-secondary" onclick="closeSpaceModal()">Cancel</button>
                     <button type="submit" class="btn-primary">Save Space</button>
@@ -615,11 +602,10 @@
                             <td>${space.name}</td>
                             <td>${space.occupancy} / ${space.capacity}</td>
                             <td>${space.occupancy_percentage}%</td>
-                            <td><span class="capacity-badge ${space.status}">${space.status.toUpperCase()}</span></td>
                         </tr>
                     `).join('');
                 } else {
-                    spacesBody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 1rem;">No spaces found</td></tr>';
+                    spacesBody.innerHTML = '<tr><td colspan="3" style="text-align: center; padding: 1rem;">No spaces found</td></tr>';
                 }
             } catch (error) {
                 console.error('Error loading dashboard:', error);
@@ -647,7 +633,6 @@
                             <td>${space.name}</td>
                             <td>${space.occupancy} / ${space.capacity}</td>
                             <td>${space.occupancy_percentage}%</td>
-                            <td><span class="capacity-badge ${space.status}">${space.status.toUpperCase()}</span></td>
                             <td>
                                 <button class="btn-sm btn-delete" onclick="deleteSpace(${space.id})">
                                     <i class="fas fa-trash"></i> Delete
@@ -656,7 +641,7 @@
                         </tr>
                     `).join('');
                 } else {
-                    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 1rem;">No spaces found</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 1rem;">No spaces found</td></tr>';
                 }
             } catch (error) {
                 console.error('Error loading spaces:', error);
@@ -738,8 +723,6 @@
 
             const name = document.getElementById('spaceName').value;
             const capacity = parseInt(document.getElementById('spaceCapacity').value);
-            const occupancy = parseInt(document.getElementById('spaceOccupancy').value);
-            const status = document.getElementById('spaceStatus').value;
 
             try {
                 const res = await fetch(`${API_URL}/admin/spaces`, {
@@ -748,11 +731,21 @@
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${AUTH_TOKEN}`
                     },
-                    body: JSON.stringify({ name, capacity, occupancy, status })
+                    body: JSON.stringify({ name, capacity })
                 });
 
                 if (res.ok) {
                     alert('Space created successfully!');
+                    // notify other pages/windows to refresh spaces
+                    try {
+                        const spacesChannel = new BroadcastChannel('campus_spaces');
+                        console.log('Admin broadcasting spaces_updated message...');
+                        spacesChannel.postMessage({ type: 'spaces_updated', timestamp: Date.now() });
+                        spacesChannel.close();
+                    } catch(err) {
+                        console.warn('BroadcastChannel not available, using localStorage fallback');
+                        try { localStorage.setItem('spaces_updated_at', Date.now().toString()); } catch(e){}
+                    }
                     closeSpaceModal();
                     loadSpaces();
                 } else {
