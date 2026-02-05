@@ -105,10 +105,96 @@ document.addEventListener('DOMContentLoaded', () => {
             else if (document.querySelector('.occupancy-list')) {
                 updateDashboard(spaces);    // We are on Student Page
             }
+            // Render main dashboard grid if present
+            if (document.getElementById('spacesGrid')) {
+                renderSpacesGrid(spaces);
+            }
+            // Render map spaces list if present
+            if (document.querySelector('.map-spaces-list')) {
+                renderMapSpacesList(spaces);
+            }
             
         } catch (error) {
             console.error("Error fetching data:", error);
         }
+    }
+
+    // --- RENDER SPACES GRID ON DASHBOARD ---
+    function renderSpacesGrid(spaces) {
+        const grid = document.getElementById('spacesGrid');
+        if (!grid) return;
+
+        grid.innerHTML = '';
+
+        spaces.forEach(space => {
+            const percentage = space.capacity ? Math.round((space.occupancy / space.capacity) * 100) : 0;
+            // prefer status column from DB if present
+            let status = (space.status || '').toString().toLowerCase();
+            if (!status) {
+                if (percentage >= 80) status = 'high';
+                else if (percentage >= 50) status = 'medium';
+                else status = 'low';
+            }
+
+            const image = "url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 400 250%22><rect fill=%22%23cbd5e1%22 width=%22400%22 height=%22250%22/></svg>')";
+
+            // tags not present in DB by default
+            const tagsHTML = '';
+
+            const card = document.createElement('div');
+            card.className = 'space-card';
+            card.innerHTML = `
+                <div class="space-image" style="background-image: ${image}"></div>
+                <div class="space-info">
+                    <h3>${space.name}</h3>
+                    <p class="space-type">${space.type || ''}</p>
+                    <div class="space-capacity">
+                        <span class="capacity-number">${space.occupancy} / ${space.capacity}</span>
+                        <span class="capacity-badge ${status}">${status.charAt(0).toUpperCase() + status.slice(1)}</span>
+                    </div>
+                    <div class="capacity-bar">
+                        <div class="capacity-fill" style="width: ${percentage}%"></div>
+                    </div>
+                    <div class="space-tags">
+                        ${tagsHTML}
+                    </div>
+                </div>
+            `;
+
+            grid.appendChild(card);
+        });
+    }
+
+    // --- RENDER SPACES LIST FOR MAP PAGE ---
+    function renderMapSpacesList(spaces) {
+        const listContainer = document.querySelector('.spaces-list');
+        if (!listContainer) return;
+
+        listContainer.innerHTML = '';
+
+        spaces.forEach(space => {
+            const percentage = space.capacity ? Math.round((space.occupancy / space.capacity) * 100) : 0;
+            let status = (space.status || '').toString().toLowerCase();
+            if (!status) {
+                if (percentage >= 80) status = 'high';
+                else if (percentage >= 50) status = 'medium';
+                else status = 'low';
+            }
+
+            const item = document.createElement('div');
+            item.className = 'space-list-item';
+            item.setAttribute('data-occupancy', status);
+            item.innerHTML = `
+                <div class="list-item-header">
+                    <h4>${space.name}</h4>
+                    <span class="capacity-badge ${status}">${status.charAt(0).toUpperCase() + status.slice(1)}</span>
+                </div>
+                <p class="space-type">${space.type || ''}</p>
+                <p class="capacity-info">${space.occupancy} / ${space.capacity} people</p>
+            `;
+
+            listContainer.appendChild(item);
+        });
     }
 
     // --- RENDER STUDENT DASHBOARD ---

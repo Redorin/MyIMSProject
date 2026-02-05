@@ -74,9 +74,13 @@
                     // Save the token so they are logged in immediately
                     localStorage.setItem('auth_token', data.access_token);
                     localStorage.setItem('user_name', data.user ? data.user.name : name);
-                    
-                    // Send to dashboard
-                    window.location.href = 'dashboard.html';
+
+                    // Redirect based on server-provided admin flag
+                    if (data.is_admin) {
+                        window.location.href = 'admin.html';
+                    } else {
+                        window.location.href = 'dashboard.html';
+                    }
                 } else {
                     // FAIL (e.g., Email already taken)
                     msgBox.style.display = 'block';

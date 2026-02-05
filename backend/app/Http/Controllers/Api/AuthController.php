@@ -31,6 +31,8 @@ class AuthController extends Controller
             'message' => 'User registered successfully',
             'access_token' => $token,
             'token_type' => 'Bearer',
+            'user' => $user,
+            'is_admin' => ($user->email === 'admin@campus.edu')
         ], 201);
     }
 
@@ -58,7 +60,8 @@ class AuthController extends Controller
             'message' => 'Login successful',
             'access_token' => $token,
             'token_type' => 'Bearer',
-            'user' => $user
+            'user' => $user,
+            'is_admin' => ($user->email === 'admin@campus.edu')
         ]);
     }
     

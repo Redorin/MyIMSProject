@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - Campus Pulse</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <i class="fas fa-compass"></i>
+                <div>
+                    <h2>Campus Pulse</h2>
+                    <p>Your guide to campus spaces</p>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="/dashboard.html" class="nav-item" onclick="navigate('/dashboard.html'); return false;">
+                    <i class="fas fa-home"></i> Dashboard
+                </a>
+                <a href="/campus-map.html" class="nav-item" onclick="navigate('/campus-map.html'); return false;">
+                    <i class="fas fa-map"></i> Campus Map
+                </a>
+                <a href="/settings.html" class="nav-item active" onclick="navigate('/settings.html'); return false;">
+                    <i class="fas fa-cog"></i> Settings
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="dashboard-header">
+                <div>
+                    <h1>Settings</h1>
+                    <p class="header-subtitle">Manage your account and data preferences.</p>
+                </div>
+                <div class="header-right">
+                    <div class="profile-dropdown">
+                        <button class="profile-btn">
+                            <i class="fas fa-user-circle"></i>
+                        </button>
+                        <div class="dropdown-menu">
+                            <div class="dropdown-header">
+                                <p class="user-name">Alex Doe</p>
+                                <p class="user-email">alex.doe@university.edu</p>
+                            </div>
+                            <a href="/settings.html" class="dropdown-item profile-link">
+                                <span>Profile</span>
+                            </a>
+                            <a href="/settings.html" class="dropdown-item">
+                                <span>Settings</span>
+                            </a>
+                            <a href="javascript:void(0);" onclick="logout();" class="dropdown-item logout-link">
+                                <span>Log out</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Settings Content -->
+            <div class="settings-container">
+                <!-- Profile Settings -->
+                <section class="settings-section">
+                    <h2 class="section-title">Profile</h2>
+                    <div class="settings-card">
+                        <div class="profile-section">
+                            <div class="profile-avatar">
+                                <i class="fas fa-user-circle"></i>
+                            </div>
+                            <div class="profile-info">
+                                <h3>Alex Doe</h3>
+                                <p>alex.doe@university.edu</p>
+                                <button class="btn-secondary">Change Photo</button>
+                            </div>
+                        </div>
+                        <hr class="divider">
+                        <div class="form-group">
+                            <label>Full Name</label>
+                            <input type="text" value="Alex Doe">
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" value="alex.doe@university.edu">
+                        </div>
+                        <div class="form-group">
+                            <label>Phone Number</label>
+                            <input type="tel" placeholder="+1 (555) 123-4567">
+                        </div>
+                        <div class="form-actions">
+                            <button class="btn-primary">Save Changes</button>
+                            <button class="btn-secondary">Cancel</button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Privacy & Data Settings -->
+                <section class="settings-section">
+                    <h2 class="section-title">Privacy & Data</h2>
+                    <div class="settings-card">
+                        <p class="section-description">Control how your location data is used to improve Campus Pulse.</p>
+                        
+                        <div class="toggle-item">
+                            <div class="toggle-label">
+                                <h4>Contribute to Occupancy Data</h4>
+                                <p>Allow Campus Pulse to use your anonymous location to provide real time occupancy data. Your exact location is never stored or shared.</p>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" checked>
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+
+                        <hr class="divider">
+
+                        <div class="toggle-item">
+                            <div class="toggle-label">
+                                <h4>Location History</h4>
+                                <p>Help us improve space recommendations by learning about your visit patterns.</p>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+
+                        <hr class="divider">
+
+                        <div class="toggle-item">
+                            <div class="toggle-label">
+                                <h4>Push Notifications</h4>
+                                <p>Receive notifications about occupancy changes in your favorite spaces.</p>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" checked>
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+
+                        <hr class="divider">
+
+                        <div class="toggle-item">
+                            <div class="toggle-label">
+                                <h4>Email Notifications</h4>
+                                <p>Receive email updates about campus events and space availability.</p>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Preferences -->
+                <section class="settings-section">
+                    <h2 class="section-title">Preferences</h2>
+                    <div class="settings-card">
+                        <div class="form-group">
+                            <label>Theme</label>
+                            <select>
+                                <option selected>Light</option>
+                                <option>Dark</option>
+                                <option>Auto</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Language</label>
+                            <select>
+                                <option selected>English</option>
+                                <option>Spanish</option>
+                                <option>French</option>
+                                <option>German</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Favorite Spaces (Select multiple)</label>
+                            <div class="checkbox-group">
+                                <label class="checkbox-item">
+                                    <input type="checkbox">
+                                    <span>Main Library</span>
+                                </label>
+                                <label class="checkbox-item">
+                                    <input type="checkbox">
+                                    <span>Student Hub</span>
+                                </label>
+                                <label class="checkbox-item">
+                                    <input type="checkbox">
+                                    <span>The Daily Grind Cafe</span>
+                                </label>
+                                <label class="checkbox-item">
+                                    <input type="checkbox">
+                                    <span>Innovation Hall</span>
+                                </label>
+                                <label class="checkbox-item">
+                                    <input type="checkbox">
+                                    <span>Central Quad</span>
+                                </label>
+                                <label class="checkbox-item">
+                                    <input type="checkbox">
+                                    <span>Recreation Center</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-actions">
+                            <button class="btn-primary">Save Preferences</button>
+                            <button class="btn-secondary">Cancel</button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Account & Security -->
+                <section class="settings-section">
+                    <h2 class="section-title">Account & Security</h2>
+                    <div class="settings-card">
+                        <div class="setting-row">
+                            <div>
+                                <h4>Password</h4>
+                                <p>Change your password regularly to keep your account secure.</p>
+                            </div>
+                            <button class="btn-secondary">Change Password</button>
+                        </div>
+
+                        <hr class="divider">
+
+                        <div class="setting-row">
+                            <div>
+                                <h4>Two-Factor Authentication</h4>
+                                <p>Add an extra layer of security to your account.</p>
+                            </div>
+                            <button class="btn-secondary">Set Up 2FA</button>
+                        </div>
+
+                        <hr class="divider">
+
+                        <div class="setting-row">
+                            <div>
+                                <h4>Login Activity</h4>
+                                <p>View and manage your recent login activity.</p>
+                            </div>
+                            <button class="btn-secondary">View Activity</button>
+                        </div>
+
+                        <hr class="divider">
+
+                        <div class="setting-row danger">
+                            <div>
+                                <h4>Delete Account</h4>
+                                <p>Permanently delete your account and all associated data.</p>
+                            </div>
+                            <button class="btn-danger">Delete Account</button>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <script src="/js/app.js"></script>
+</body>
+</html>
