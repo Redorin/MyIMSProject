@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campus Map - Campus Pulse</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY"></script>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <i class="fas fa-compass"></i>
+                <div>
+                    <h2>Campus Pulse</h2>
+                    <p>Your guide to campus spaces</p>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html" class="nav-item" onclick="navigate('dashboard.html'); return false;">
+                    <i class="fas fa-home"></i> Dashboard
+                </a>
+                <a href="campus-map.html" class="nav-item active" onclick="navigate('campus-map.html'); return false;">
+                    <i class="fas fa-map"></i> Campus Map
+                </a>
+                <a href="settings.html" class="nav-item" onclick="navigate('settings.html'); return false;">
+                    <i class="fas fa-cog"></i> Settings
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="dashboard-header">
+                <div>
+                    <h1>Campus Map</h1>
+                    <p class="header-subtitle">View real-time occupancy levels across campus.</p>
+                </div>
+                <div class="header-right">
+                    <div class="profile-dropdown">
+                        <button class="profile-btn">
+                            <i class="fas fa-user-circle"></i>
+                        </button>
+                        <div class="dropdown-menu">
+                            <div class="dropdown-header">
+                                <p class="user-name">Alex Doe</p>
+                                <p class="user-email">alex.doe@university.edu</p>
+                            </div>
+                            <a href="settings.html" class="dropdown-item profile-link">
+                                <span>Profile</span>
+                            </a>
+                            <a href="settings.html" class="dropdown-item">
+                                <span>Settings</span>
+                            </a>
+                            <a href="javascript:void(0);" onclick="logout();" class="dropdown-item logout-link">
+                                <span>Log out</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Map Section -->
+            <section class="map-section">
+                <div id="map-container" class="map-large">
+                    <div class="map-placeholder">
+                        <i class="fas fa-map"></i>
+                        <p>Google Maps API Key is missing.</p>
+                        <small>Configure your Google Maps API key to see the interactive map</small>
+                    </div>
+                </div>
+
+                <!-- Space Filters -->
+                <div class="map-controls">
+                    <div class="filter-group">
+                        <h3>Filter by Occupancy</h3>
+                        <label class="checkbox-item">
+                            <input type="checkbox" checked value="all">
+                            <span>All Spaces</span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" checked value="low">
+                            <i class="badge-dot" style="background: #22c55e;"></i>
+                            <span>Low Occupancy</span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" checked value="medium">
+                            <i class="badge-dot" style="background: #eab308;"></i>
+                            <span>Medium Occupancy</span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" checked value="high">
+                            <i class="badge-dot" style="background: #ef4444;"></i>
+                            <span>High Occupancy</span>
+                        </label>
+                    </div>
+
+                    <div class="filter-group">
+                        <h3>Space Types</h3>
+                        <label class="checkbox-item">
+                            <input type="checkbox" checked value="library">
+                            <span>Library</span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" checked value="cafe">
+                            <span>Cafe</span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" checked value="gym">
+                            <span>Gym</span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" checked value="outdoor">
+                            <span>Outdoor</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Spaces List on Map -->
+                <div class="map-spaces-list">
+                    <h3>Spaces on Map</h3>
+                    <div class="spaces-list">
+                        <div class="space-list-item" data-occupancy="low">
+                            <div class="list-item-header">
+                                <h4>Main Library</h4>
+                                <span class="capacity-badge low">Low</span>
+                            </div>
+                            <p class="space-type">Library</p>
+                            <p class="capacity-info">350 / 500 people</p>
+                        </div>
+                        <div class="space-list-item" data-occupancy="medium">
+                            <div class="list-item-header">
+                                <h4>Student Hub</h4>
+                                <span class="capacity-badge medium">Medium</span>
+                            </div>
+                            <p class="space-type">Lounge</p>
+                            <p class="capacity-info">80 / 200 people</p>
+                        </div>
+                        <div class="space-list-item" data-occupancy="high">
+                            <div class="list-item-header">
+                                <h4>The Daily Grind Cafe</h4>
+                                <span class="capacity-badge high">High</span>
+                            </div>
+                            <p class="space-type">Cafe</p>
+                            <p class="capacity-info">70 / 75 people</p>
+                        </div>
+                        <div class="space-list-item" data-occupancy="low">
+                            <div class="list-item-header">
+                                <h4>Innovation Hall</h4>
+                                <span class="capacity-badge low">Low</span>
+                            </div>
+                            <p class="space-type">Study Area</p>
+                            <p class="capacity-info">45 / 150 people</p>
+                        </div>
+                        <div class="space-list-item" data-occupancy="low">
+                            <div class="list-item-header">
+                                <h4>Central Quad</h4>
+                                <span class="capacity-badge low">Low</span>
+                            </div>
+                            <p class="space-type">Outdoor</p>
+                            <p class="capacity-info">150 / 1000 people</p>
+                        </div>
+                        <div class="space-list-item" data-occupancy="high">
+                            <div class="list-item-header">
+                                <h4>Recreation Center</h4>
+                                <span class="capacity-badge high">High</span>
+                            </div>
+                            <p class="space-type">Gym</p>
+                            <p class="capacity-info">250 / 300 people</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>

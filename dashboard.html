@@ -3,90 +3,195 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Safe Space IMS</title>
+    <title>Dashboard - Campus Pulse</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-
-    <nav class="navbar">
-        <div class="nav-brand">
-            <i class="fas fa-shield-alt"></i> SafeSpace IMS
-        </div>
-        <div class="nav-user">
-            <span>Welcome, <strong>Student</strong></span>
-            <button class="btn-sm">Logout</button>
-        </div>
-    </nav>
-
-    <div class="main-content">
-        
-        <section class="control-panel">
-            <div class="status-card">
-                <div class="status-text">
-                    <h3>Your Status: <span class="status-active">Active</span></h3>
-                    <p>You are sharing your location to help others find safe spaces.</p>
-                </div>
-                <div class="toggle-switch">
-                    <label class="switch">
-                        <input type="checkbox" checked>
-                        <span class="slider round"></span>
-                    </label>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <i class="fas fa-compass"></i>
+                <div>
+                    <h2>Campus Pulse</h2>
+                    <p>Your guide to campus spaces</p>
                 </div>
             </div>
-        </section>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html" class="nav-item active" onclick="navigate('dashboard.html'); return false;">
+                    <i class="fas fa-home"></i> Dashboard
+                </a>
+                <a href="campus-map.html" class="nav-item" onclick="navigate('campus-map.html'); return false;">
+                    <i class="fas fa-map"></i> Campus Map
+                </a>
+                <a href="settings.html" class="nav-item" onclick="navigate('settings.html'); return false;">
+                    <i class="fas fa-cog"></i> Settings
+                </a>
+            </nav>
+        </aside>
 
-        <div class="dashboard-grid">
-            
-            <section class="map-section">
-                <h2><i class="fas fa-map"></i> Campus Map</h2>
-                <div class="map-container">
-                    <div class="campus-zone zone-library" data-occupancy="low">
-                        <span>Library</span>
-                        <small>Quiet</small>
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="dashboard-header">
+                <h1>Campus Pulse</h1>
+                <div class="header-right">
+                    <div class="profile-dropdown">
+                        <button class="profile-btn">
+                            <i class="fas fa-user-circle"></i>
+                        </button>
+                        <div class="dropdown-menu">
+                            <div class="dropdown-header">
+                                <p class="user-name">Alex Doe</p>
+                                <p class="user-email">alex.doe@university.edu</p>
+                            </div>
+                            <a href="settings.html" class="dropdown-item profile-link">
+                                <span>Profile</span>
+                            </a>
+                            <a href="settings.html" class="dropdown-item">
+                                <span>Settings</span>
+                            </a>
+                            <a href="javascript:void(0);" onclick="logout();" class="dropdown-item logout-link">
+                                <span>Log out</span>
+                            </a>
+                        </div>
                     </div>
-                    <div class="campus-zone zone-canteen" data-occupancy="high">
-                        <span>Canteen</span>
-                        <small>Crowded</small>
+                </div>
+            </header>
+
+            <!-- Live Space Availability Section -->
+            <section class="availability-section">
+                <h2>Live Space Availability</h2>
+                <div class="spaces-grid">
+                    <!-- Space Card 1 -->
+                    <div class="space-card">
+                        <div class="space-image" style="background-image: url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 400 250%22><rect fill=%22%238B7355%22 width=%22400%22 height=%22250%22/><ellipse cx=%22200%22 cy=%22100%22 rx=%2280%22 ry=%2260%22 fill=%22%22654321%22/></svg>')">
+                        </div>
+                        <div class="space-info">
+                            <h3>Main Library</h3>
+                            <p class="space-type">Library</p>
+                            <div class="space-capacity">
+                                <span class="capacity-number">350 / 500</span>
+                                <span class="capacity-badge medium">Medium</span>
+                            </div>
+                            <div class="capacity-bar">
+                                <div class="capacity-fill" style="width: 70%"></div>
+                            </div>
+                            <div class="space-tags">
+                                <span class="tag">Quiet Zone</span>
+                                <span class="tag">Power Outlets</span>
+                            </div>
+                        </div>
                     </div>
-                    <div class="campus-zone zone-gym" data-occupancy="medium">
-                        <span>Gymnasium</span>
-                        <small>Moderate</small>
+
+                    <!-- Space Card 2 -->
+                    <div class="space-card">
+                        <div class="space-image" style="background-image: url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 400 250%22><rect fill=%22%2390EE90%22 width=%22400%22 height=%22250%22/><path fill=%22%23228B22%22 d=%22M100,200 L150,100 L200,200 Z%22/><path fill=%22%23228B22%22 d=%22M220,200 L270,100 L320,200 Z%22/></svg>')">
+                        </div>
+                        <div class="space-info">
+                            <h3>Student Hub</h3>
+                            <p class="space-type">Lounge</p>
+                            <div class="space-capacity">
+                                <span class="capacity-number">80 / 200</span>
+                                <span class="capacity-badge medium">Medium</span>
+                            </div>
+                            <div class="capacity-bar">
+                                <div class="capacity-fill" style="width: 40%"></div>
+                            </div>
+                            <div class="space-tags">
+                                <span class="tag">Social Space</span>
+                                <span class="tag">Vending Machines</span>
+                            </div>
+                        </div>
                     </div>
-                    <div class="campus-zone zone-park" data-occupancy="low">
-                        <span>Study Park</span>
-                        <small>Safe</small>
+
+                    <!-- Space Card 3 -->
+                    <div class="space-card">
+                        <div class="space-image" style="background-image: url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 400 250%22><rect fill=%22%238B6914%22 width=%22400%22 height=%22250%22/><circle cx=%22200%22 cy=%22125%22 r=%2230%22 fill=%22%23D2691E%22/></svg>')">
+                        </div>
+                        <div class="space-info">
+                            <h3>The Daily Grind Cafe</h3>
+                            <p class="space-type">Cafe</p>
+                            <div class="space-capacity">
+                                <span class="capacity-number">70 / 75</span>
+                                <span class="capacity-badge high">High</span>
+                            </div>
+                            <div class="capacity-bar">
+                                <div class="capacity-fill" style="width: 93%"></div>
+                            </div>
+                            <div class="space-tags">
+                                <span class="tag">Coffee & Snacks</span>
+                                <span class="tag">Outdoor Seating</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Space Card 4 -->
+                    <div class="space-card">
+                        <div class="space-image" style="background-image: url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 400 250%22><rect fill=%22%23808080%22 width=%22400%22 height=%22250%22/><rect x=%2250%22 y=%2250%22 width=%22100%22 height=%22150%22 fill=%22%23696969%22/><rect x=%22250%22 y=%2250%22 width=%22100%22 height=%22150%22 fill=%22%23696969%22/></svg>')">
+                        </div>
+                        <div class="space-info">
+                            <h3>Innovation Hall</h3>
+                            <p class="space-type">Study Area</p>
+                            <div class="space-capacity">
+                                <span class="capacity-number">45 / 150</span>
+                                <span class="capacity-badge low">Low</span>
+                            </div>
+                            <div class="capacity-bar">
+                                <div class="capacity-fill" style="width: 30%"></div>
+                            </div>
+                            <div class="space-tags">
+                                <span class="tag">Whiteboards</span>
+                                <span class="tag">Projectors</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Space Card 5 -->
+                    <div class="space-card">
+                        <div class="space-image" style="background-image: url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 400 250%22><rect fill=%22%231E90FF%22 width=%22400%22 height=%22250%22/><circle cx=%22150%22 cy=%22125%22 r=%2240%22 fill=%22%2300BFFF%22/><circle cx=%22250%22 cy=%22125%22 r=%2240%22 fill=%22%2300BFFF%22/></svg>')">
+                        </div>
+                        <div class="space-info">
+                            <h3>Central Quad</h3>
+                            <p class="space-type">Outdoor</p>
+                            <div class="space-capacity">
+                                <span class="capacity-number">150 / 1000</span>
+                                <span class="capacity-badge low">Low</span>
+                            </div>
+                            <div class="capacity-bar">
+                                <div class="capacity-fill" style="width: 15%"></div>
+                            </div>
+                            <div class="space-tags">
+                                <span class="tag">Green Space</span>
+                                <span class="tag">Benches</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Space Card 6 -->
+                    <div class="space-card">
+                        <div class="space-image" style="background-image: url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 400 250%22><rect fill=%22%2328a745%22 width=%22400%22 height=%22250%22/><line x1=%220%22 y1=%2250%22 x2=%22400%22 y2=%2250%22 stroke=%22%23fff%22 stroke-width=%222%22/><line x1=%220%22 y1=%22150%22 x2=%22400%22 y2=%22150%22 stroke=%22%23fff%22 stroke-width=%222%22/></svg>')">
+                        </div>
+                        <div class="space-info">
+                            <h3>Recreation Center</h3>
+                            <p class="space-type">Gym</p>
+                            <div class="space-capacity">
+                                <span class="capacity-number">250 / 300</span>
+                                <span class="capacity-badge high">High</span>
+                            </div>
+                            <div class="capacity-bar">
+                                <div class="capacity-fill" style="width: 83%"></div>
+                            </div>
+                            <div class="space-tags">
+                                <span class="tag">Fitness Equipment</span>
+                                <span class="tag">Basketball Courts</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>
-
-            <section class="list-section">
-                <h2>Real-Time Occupancy</h2>
-                <div class="occupancy-list">
-                    <div class="zone-card">
-                        <div class="zone-info">
-                            <h4>University Library</h4>
-                            <p>Capacity: 15/100</p>
-                        </div>
-                        <span class="badge badge-green">Low Traffic</span>
-                    </div>
-                    <div class="zone-card">
-                        <div class="zone-info">
-                            <h4>Main Canteen</h4>
-                            <p>Capacity: 85/100</p>
-                        </div>
-                        <span class="badge badge-red">High Traffic</span>
-                    </div>
-                    <div class="zone-card">
-                        <div class="zone-info">
-                            <h4>Student Center</h4>
-                            <p>Capacity: 45/100</p>
-                        </div>
-                        <span class="badge badge-yellow">Moderate</span>
-                    </div>
-                </div>
-            </section>
-        </div>
+        </main>
     </div>
 
     <script src="js/app.js"></script>

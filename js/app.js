@@ -1,6 +1,25 @@
 // --- 1. GLOBAL CONFIGURATION ---
 const API_URL = 'http://127.0.0.1:8000/api/spaces';
 
+// --- UTILITY FUNCTIONS ---
+// Logout function
+window.logout = function() {
+    localStorage.removeItem('user');
+    localStorage.removeItem('token');
+    sessionStorage.clear();
+    window.location.href = 'index.html';
+};
+
+// Navigation function
+window.navigate = function(page) {
+    window.location.href = page;
+};
+
+// Redirect function
+window.redirect = function(page) {
+    window.location.href = page;
+};
+
 // --- 2. MAKE THIS FUNCTION PUBLIC (The "Magic Key" Fix) ---
 // We define this OUTSIDE the event listener so HTML buttons can find it.
 window.modifyOccupancy = async function(id, currentVal, change) {
@@ -32,6 +51,46 @@ window.modifyOccupancy = async function(id, currentVal, change) {
 
 // --- 3. MAIN APP LOGIC ---
 document.addEventListener('DOMContentLoaded', () => {
+
+    // --- NAVIGATION SETUP ---
+    // Set active nav item based on current page
+    const navItems = document.querySelectorAll('.nav-item');
+    const currentPage = window.location.pathname.split('/').pop() || 'dashboard.html';
+    
+    navItems.forEach(item => {
+        const href = item.getAttribute('href');
+        if (href === currentPage || (currentPage === '' && href === 'dashboard.html')) {
+            item.classList.add('active');
+        } else {
+            item.classList.remove('active');
+        }
+        
+        // Add click handler to update active state
+        item.addEventListener('click', function() {
+            navItems.forEach(nav => nav.classList.remove('active'));
+            this.classList.add('active');
+        });
+    });
+
+    // --- LOGOUT SETUP ---
+    const logoutLinks = document.querySelectorAll('.logout-link');
+    logoutLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            logout();
+        });
+    });
+
+    // Handle save buttons
+    const saveBtns = document.querySelectorAll('.form-actions .btn-primary');
+    saveBtns.forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            if (this.textContent.includes('Save')) {
+                e.preventDefault();
+                alert('Changes saved successfully!');
+            }
+        });
+    });
 
     // --- FETCH DATA (The Traffic Cop) ---
     async function fetchSpaces() {
