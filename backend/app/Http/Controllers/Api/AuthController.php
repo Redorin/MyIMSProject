@@ -129,4 +129,13 @@ class AuthController extends Controller
 
         return response()->json(['message' => 'Password changed successfully']);
     }
+
+    // FIND THIS IN AuthController.php
+    public function pendingUsers()
+    {
+        // CHANGE 'false' to '0' (Better for MySQL)
+        $users = User::where('is_approved', 0)->get(); 
+        
+        return response()->json($users);
+    }
 }

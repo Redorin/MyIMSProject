@@ -170,6 +170,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    
+
     // --- RENDER SPACES GRID ON DASHBOARD ---
     function renderSpacesGrid(spaces) {
         const grid = document.getElementById('spacesGrid');
@@ -345,4 +347,69 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+    // FIND THIS FUNCTION IN js/app.js AND REPLACE IT ENTIRELY
+async function fetchPendingUsers() {
+    const tableBody = document.getElementById('pendingUsersTable');
+    const badge = document.getElementById('pending-badge');
+    
+    // 1. If we are not on the Admin page, stop.
+    if (!tableBody) return; 
+
+    // 2. GET THE KEY (Token)
+    const token = localStorage.getItem('auth_token');
+
+    try {
+        const response = await fetch(`${AUTH_URL}/pending-users`, {
+            method: 'GET',
+            // 3. SEND THE KEY (The Missing Part!)
+            headers: {
+                'Authorization': `Bearer ${token}`, 
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            }
+        });
+
+        // Check if the token is invalid (Expired or Fake)
+        if (response.status === 401) {
+            console.error("Token invalid. Logging out...");
+            logout(); // Force logout if token is bad
+            return;
+        }
+
+        const users = await response.json();
+
+        // 4. Update the Notification Badge (Red number)
+        if (badge) {
+            badge.innerText = users.length;
+            badge.style.display = users.length > 0 ? 'inline-block' : 'none';
+        }
+
+        // 5. Update the Table
+        tableBody.innerHTML = ''; 
+        
+        if (users.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="4" style="text-align:center;">No pending registrations.</td></tr>';
+            return;
+        }
+
+        users.forEach(user => {
+            const row = `
+                <tr>
+                    <td>${user.name}</td>
+                    <td>${user.student_id}</td>
+                    <td>${user.email}</td>
+                    <td>
+                        <button class="btn-action btn-plus" onclick="approveUser(${user.id})" title="Approve Student">
+                            Verify <i class="fas fa-check"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+            tableBody.innerHTML += row;
+        });
+
+    } catch (error) {
+        console.error("Error loading pending users:", error);
+    }
+}
 });
