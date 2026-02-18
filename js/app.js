@@ -388,13 +388,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const users = await response.json();
             console.log('pending users response', users);
 
-            // update sidebar badge count
-            const navBtn = document.getElementById('pendingNavBtn');
-            if (navBtn) {
-                const baseText = 'Pending Verifications';
-                navBtn.innerHTML = `<i class="fas fa-hourglass-half"></i> ${baseText} (${users.length})`;
-            }
-
             tableBody.innerHTML = ''; // Clear list
 
             if (users.length === 0) {
@@ -404,7 +397,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             users.forEach(user => {
                 const row = `
-                    <tr class="pending-row">
+                    <tr>
                         <td>${user.name}</td>
                         <td>${user.student_id}</td>
                         <td>${user.email}</td>
