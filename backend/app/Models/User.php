@@ -21,9 +21,11 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
+        'student_id',
         'phone',
         'preferences',
         'password',
+        'status', // pending/approved/rejected
     ];
 
     /**
@@ -45,5 +47,6 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
         'preferences' => 'array',
+        'status' => 'string',
     ];
 }

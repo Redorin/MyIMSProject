@@ -16,22 +16,22 @@ class AuthController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
+            'student_id' => ['required','string','unique:users,student_id', 'regex:/^\d{2}-\d{4}-\d{3}$/'],
             'password' => 'required|string|min:8',
         ]);
 
+        // create user with pending status
         $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
+            'student_id' => $validated['student_id'],
             'password' => Hash::make($validated['password']),
+            'status' => 'pending',
         ]);
 
-        // Create a token for them immediately
-        $token = $user->createToken('auth_token')->plainTextToken;
-
+        // do not auto-sign in; the account requires admin approval
         return response()->json([
-            'message' => 'User registered successfully',
-            'access_token' => $token,
-            'token_type' => 'Bearer',
+            'message' => 'Account created successfully. Your account is pending approval by an administrator.',
             'user' => $user,
             'is_admin' => ($user->email === 'admin@campus.edu')
         ], 201);
@@ -52,6 +52,17 @@ class AuthController extends Controller
             return response()->json([
                 'message' => 'Invalid login credentials'
             ], 401);
+        }
+
+        // refuse login if not approved
+        if ($user->status !== 'approved') {
+            $msg = $user->status === 'rejected'
+                    ? 'Your account request was rejected. Please contact support.'
+                    : 'Your account is still pending approval.';
+
+            return response()->json([
+                'message' => $msg
+            ], 403);
         }
 
         // Issue a new token

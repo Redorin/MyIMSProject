@@ -1,5 +1,6 @@
 // --- 1. GLOBAL CONFIGURATION ---
-const API_URL = 'http://127.0.0.1:8000/api/spaces';
+// base value for non-admin pages; allow override by other scripts
+var API_URL = (typeof API_URL !== 'undefined') ? API_URL : 'http://127.0.0.1:8000/api/spaces';
 
 // --- UTILITY FUNCTIONS ---
 // Logout function
@@ -139,7 +140,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- FETCH DATA (The Traffic Cop) ---
     async function fetchSpaces() {
         try {
-            const response = await fetch(API_URL);
+            // API_URL may be '/api' on admin pages or '/api/spaces' on student pages.
+            // ensure we request the correct endpoint for space list.
+            let url = API_URL;
+            if (url.endsWith('/api')) {
+                url = url + '/spaces';
+            }
+            const response = await fetch(url);
             const spaces = await response.json();
 
             // LOGIC: Check which page we are on

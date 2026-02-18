@@ -11,17 +11,74 @@ use Illuminate\Support\Facades\Hash;
 
 class AdminController extends Controller
 {
-    // Get all users
+    // simple helper to assert the authenticated user is the admin
+    protected function ensureAdmin()
+    {
+        $user = auth()->user();
+        if (! $user || $user->email !== 'admin@campus.edu') {
+            abort(403, 'Unauthorized');
+        }
+    }
+
+    // Get all users (optionally include status)
     public function getUsers()
     {
+        $this->ensureAdmin();
         return response()->json(User::all());
+    }
+
+    // Get users waiting for approval
+    public function getPendingUsers()
+    {
+        $this->ensureAdmin();
+        return response()->json(
+            User::where('status', 'pending')->get()
+        );
+    }
+
+    // approve a pending student
+    public function approveUser($id)
+    {
+        $this->ensureAdmin();
+        $user = User::findOrFail($id);
+        $user->status = 'approved';
+        $user->save();
+
+        ActivityLog::create([
+            'user_id' => auth()->id(),
+            'action' => 'approved',
+            'target_model' => 'User',
+            'target_id' => $id,
+            'description' => "Approved user: {$user->name} ({$user->email})"
+        ]);
+
+        return response()->json(['message' => 'User approved successfully', 'user' => $user]);
+    }
+
+    // reject a pending student
+    public function rejectUser($id)
+    {
+        $this->ensureAdmin();
+        $user = User::findOrFail($id);
+        $user->status = 'rejected';
+        $user->save();
+
+        ActivityLog::create([
+            'user_id' => auth()->id(),
+            'action' => 'rejected',
+            'target_model' => 'User',
+            'target_id' => $id,
+            'description' => "Rejected user: {$user->name} ({$user->email})"
+        ]);
+
+        return response()->json(['message' => 'User rejected', 'user' => $user]);
     }
 
     // Delete a user
     public function deleteUser($id)
     {
+        $this->ensureAdmin();
         $user = User::findOrFail($id);
-        $user->delete();
         
         // Log the action
         ActivityLog::create([

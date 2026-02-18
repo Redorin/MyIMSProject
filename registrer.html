@@ -28,6 +28,11 @@
                 </div>
                 
                 <div class="input-group">
+                    <label>Student ID (format 12-3456-789)</label>
+                    <input type="text" id="regStudentId" placeholder="12-3456-789" required pattern="\d{2}-\d{4}-\d{3}">
+                </div>
+                
+                <div class="input-group">
                     <label>Password</label>
                     <input type="password" id="regPassword" placeholder="Minimum 8 characters" required minlength="8">
                 </div>
@@ -51,8 +56,18 @@
 
             const name = document.getElementById('regName').value;
             const email = document.getElementById('regEmail').value;
+            const studentId = document.getElementById('regStudentId').value;
             const password = document.getElementById('regPassword').value;
             const msgBox = document.getElementById('regMessage');
+
+            // simple client‑side pattern check before sending
+            const idPattern = /^\d{2}-\d{4}-\d{3}$/;
+            if (!idPattern.test(studentId)) {
+                msgBox.style.display = 'block';
+                msgBox.style.color = 'red';
+                msgBox.innerText = 'Student ID must follow the format ##-####-###';
+                return;
+            }
 
             try {
                 // Send data to Laravel Backend
@@ -62,30 +77,29 @@
                         'Content-Type': 'application/json',
                         'Accept': 'application/json'
                     },
-                    body: JSON.stringify({ name, email, password })
+                    body: JSON.stringify({ name, email, student_id: studentId, password })
                 });
 
                 const data = await response.json();
 
                 if (response.ok) {
-                    // SUCCESS!
-                    alert('Account created successfully! Redirecting to dashboard...');
-                    
-                    // Save the token so they are logged in immediately
-                    localStorage.setItem('auth_token', data.access_token);
-                    localStorage.setItem('user_name', data.user ? data.user.name : name);
-
-                    // Redirect based on server-provided admin flag
-                    if (data.is_admin) {
-                        window.location.href = 'admin.html';
-                    } else {
-                        window.location.href = 'dashboard.html';
-                    }
+                    // SUCCESS! show pending message
+                    msgBox.style.display = 'block';
+                    msgBox.style.color = 'green';
+                    msgBox.innerText = data.message || 'Your account is pending approval.';
+                    // do not log them in yet
                 } else {
-                    // FAIL (e.g., Email already taken)
+                    // FAIL (validation or other error)
                     msgBox.style.display = 'block';
                     msgBox.style.color = 'red';
-                    msgBox.innerText = data.message || 'Registration failed.';
+                    // if Laravel sent back a list of field errors use them
+                    if (data.errors) {
+                        // join all the messages in one string
+                        const messages = Object.values(data.errors).flat().join(' ');
+                        msgBox.innerText = messages;
+                    } else {
+                        msgBox.innerText = data.message || 'Registration failed.';
+                    }
                 }
             } catch (error) {
                 console.error('Error:', error);

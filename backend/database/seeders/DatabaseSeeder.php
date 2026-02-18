@@ -15,10 +15,12 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
 {
-    // Create a Student
+    // Create a Student (already approved)
     User::create([
         'name' => 'John Student',
         'email' => 'student@campus.edu',
+        'student_id' => '12-3456-789',
+        'status' => 'approved',
         'password' => Hash::make('password123'), // Securely hashed
     ]);
 
@@ -27,6 +29,7 @@ class DatabaseSeeder extends Seeder
         'name' => 'Admin Staff',
         'email' => 'admin@campus.edu',
         'password' => Hash::make('admin123'),
+        'status' => 'approved',
     ]);
 
     $this->call(SpaceSeeder::class);

@@ -26,6 +26,8 @@ class UserFactory extends Factory
         return [
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
+            'student_id' => sprintf("%02d-%04d-%03d", fake()->numberBetween(0,99), fake()->numberBetween(0,9999), fake()->numberBetween(0,999)),
+            'status' => 'approved',
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),

@@ -29,6 +29,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/admin/dashboard-stats', [AdminController::class, 'getDashboardStats']);
     Route::get('/admin/users', [AdminController::class, 'getUsers']);
     Route::delete('/admin/users/{id}', [AdminController::class, 'deleteUser']);
+    // pending verifications
+    Route::get('/admin/pending-users', [AdminController::class, 'getPendingUsers']);
+    Route::post('/admin/users/{id}/approve', [AdminController::class, 'approveUser']);
+    Route::post('/admin/users/{id}/reject', [AdminController::class, 'rejectUser']);
+
     Route::post('/admin/spaces', [AdminController::class, 'createSpace']);
     Route::delete('/admin/spaces/{id}', [AdminController::class, 'deleteSpace']);
     Route::get('/admin/activity-logs', [AdminController::class, 'getActivityLogs']);
