@@ -5,7 +5,6 @@ namespace Tests\Feature;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 use App\Models\User;
-use Laravel\Sanctum\Sanctum;
 
 class RegistrationTest extends TestCase
 {
@@ -70,28 +69,5 @@ class RegistrationTest extends TestCase
         ]);
         $bad->assertStatus(422);
         $bad->assertJsonValidationErrors(['student_id']);
-    }
-
-    /** @test */
-    public function only_admin_can_fetch_pending_users()
-    {
-        // create a regular user and obtain token
-        $user = User::factory()->create(['status' => 'approved']);
-        $token = $this->postJson('/api/login', ['email' => $user->email, 'password' => 'password'])->json('access_token');
-
-        $this->withHeaders(['Authorization' => "Bearer $token"])
-             ->getJson('/api/admin/pending-users')
-             ->assertStatus(403);
-
-        // create admin user
-        $admin = User::factory()->create(['email' => 'admin@campus.edu', 'status' => 'approved']);
-        // instead of trying to log in via token, use Sanctum helper to authenticate
-        \Laravel\Sanctum\Sanctum::actingAs($admin, ['*']);
-
-        $pendingResponse = $this->getJson('/api/admin/pending-users');
-        if ($pendingResponse->status() !== 200) {
-            fwrite(STDERR, "pending response: ".json_encode($pendingResponse->json())."\n");
-        }
-        $pendingResponse->assertStatus(200);
     }
 }

@@ -39,11 +39,10 @@
     const API_URL = 'http://127.0.0.1:8000/api';
 
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
-        e.preventDefault(); // Stop page refresh
-
+        e.preventDefault();
+        
         const email = document.getElementById('email').value;
         const password = document.getElementById('password').value;
-        const errorMsg = document.getElementById('errorMessage');
 
         try {
             const response = await fetch(`${API_URL}/login`, {
@@ -58,25 +57,23 @@
             const data = await response.json();
 
             if (response.ok) {
-                // SUCCESS: Save the token and redirect
+                // 1. Save the ID Card (Token)
                 localStorage.setItem('auth_token', data.access_token);
-                localStorage.setItem('user_name', data.user.name);
-                
-                // Redirect based on server-provided admin flag
-                if (data.is_admin) {
-                    window.location.href = 'admin.html';
+                localStorage.setItem('user_role', data.role); // Save the Role too!
+
+                // 2. CHECK THE ROLE (The Traffic Cop)
+                if (data.role === 'admin') {
+                    window.location.href = 'admin.html'; // Bosses go here
                 } else {
-                    window.location.href = 'dashboard.html';
+                    window.location.href = 'dashboard.html'; // Students go here
                 }
+                
             } else {
-                // ERROR: Show message
-                errorMsg.style.display = 'block';
-                errorMsg.textContent = data.message || 'Login failed';
+                alert(data.message || "Login failed");
             }
         } catch (error) {
-            console.error('Error:', error);
-            errorMsg.style.display = 'block';
-            errorMsg.textContent = 'Server error. Is the backend running?';
+            console.error("Error:", error);
+            alert("Login error. Is the server running?");
         }
     });
 </script>

@@ -20,6 +20,9 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     // Profile routes
+    // Add inside the protected middleware group (or public if you want to test easily)
+Route::get('/pending-users', [AuthController::class, 'pendingUsers']);
+Route::put('/approve-user/{id}', [AuthController::class, 'approveUser']);
     Route::get('/profile', [AuthController::class, 'profile']);
     Route::put('/profile', [AuthController::class, 'updateProfile']);
     Route::put('/profile/password', [AuthController::class, 'changePassword']);
@@ -29,11 +32,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/admin/dashboard-stats', [AdminController::class, 'getDashboardStats']);
     Route::get('/admin/users', [AdminController::class, 'getUsers']);
     Route::delete('/admin/users/{id}', [AdminController::class, 'deleteUser']);
-    // pending verifications
-    Route::get('/admin/pending-users', [AdminController::class, 'getPendingUsers']);
-    Route::post('/admin/users/{id}/approve', [AdminController::class, 'approveUser']);
-    Route::post('/admin/users/{id}/reject', [AdminController::class, 'rejectUser']);
-
     Route::post('/admin/spaces', [AdminController::class, 'createSpace']);
     Route::delete('/admin/spaces/{id}', [AdminController::class, 'deleteSpace']);
     Route::get('/admin/activity-logs', [AdminController::class, 'getActivityLogs']);

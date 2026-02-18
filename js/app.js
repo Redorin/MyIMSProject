@@ -1,6 +1,6 @@
 // --- 1. GLOBAL CONFIGURATION ---
-// base value for non-admin pages; allow override by other scripts
-var API_URL = (typeof API_URL !== 'undefined') ? API_URL : 'http://127.0.0.1:8000/api/spaces';
+// this script only needs the spaces endpoint; the base API_URL is defined per-page
+const SPACES_API_URL = 'http://127.0.0.1:8000/api/spaces';
 
 // --- UTILITY FUNCTIONS ---
 // Logout function
@@ -32,7 +32,7 @@ window.modifyOccupancy = async function(id, currentVal, change) {
     if (newVal < 0) newVal = 0; // Prevent negative numbers
 
     try {
-        const response = await fetch(`${API_URL}/${id}`, {
+        const response = await fetch(`${SPACES_API_URL}/${id}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -97,7 +97,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (token) {
             try {
-                const resp = await fetch('http://127.0.0.1:8000/api/profile', {
+                const resp = await fetch(`${window.API_URL||'http://127.0.0.1:8000/api'}/profile`, {
                     headers: {
                         'Accept': 'application/json',
                         'Authorization': 'Bearer ' + token
@@ -140,13 +140,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- FETCH DATA (The Traffic Cop) ---
     async function fetchSpaces() {
         try {
-            // API_URL may be '/api' on admin pages or '/api/spaces' on student pages.
-            // ensure we request the correct endpoint for space list.
-            let url = API_URL;
-            if (url.endsWith('/api')) {
-                url = url + '/spaces';
-            }
-            const response = await fetch(url);
+            const response = await fetch(SPACES_API_URL);
             const spaces = await response.json();
 
             // LOGIC: Check which page we are on
@@ -169,8 +163,6 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error("Error fetching data:", error);
         }
     }
-
-    
 
     // --- RENDER SPACES GRID ON DASHBOARD ---
     function renderSpacesGrid(spaces) {
@@ -248,6 +240,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
             listContainer.appendChild(item);
         });
+    }
+
+    // redirect from root index page based on role
+    const currentPath = window.location.pathname || '';
+    if (currentPath.includes('index.html') || currentPath === '/' || currentPath === '') {
+        const role = localStorage.getItem('user_role');
+        if (role === 'admin') {
+            window.location.href = 'admin.html';
+        } else {
+            window.location.href = 'dashboard.html';
+        }
     }
 
     // --- RENDER STUDENT DASHBOARD ---
@@ -347,69 +350,133 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-    // FIND THIS FUNCTION IN js/app.js AND REPLACE IT ENTIRELY
-async function fetchPendingUsers() {
-    const tableBody = document.getElementById('pendingUsersTable');
-    const badge = document.getElementById('pending-badge');
-    
-    // 1. If we are not on the Admin page, stop.
-    if (!tableBody) return; 
 
-    // 2. GET THE KEY (Token)
+    // --- NEW FUNCTION: Fetch Pending Users ---
+    // exposed globally so other scripts (e.g. switchSection) can call it
+    window.fetchPendingUsers = async function() {
+        console.log('fetchPendingUsers called');
+        const tableBody = document.getElementById('pendingUsersTable');
+        if (!tableBody) return; // Only run on Admin page or when section exists
+
+        // show spinner row
+        tableBody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Loading…</td></tr>';
+
+        const token = localStorage.getItem('auth_token');
+        if (!token) {
+            console.warn('No auth token, cannot fetch pending users');
+            tableBody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:red;">Not authenticated</td></tr>';
+            return;
+        }
+
+        try {
+            const response = await fetch('http://127.0.0.1:8000/api/pending-users', {
+                headers: {
+                    'Accept': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                }
+            });
+
+            if (!response.ok) {
+                console.error('Failed to load pending users', response.status, response.statusText);
+                if (response.status === 401 || response.status === 403) {
+                    alert('You must be logged in as admin to view pending users.');
+                }
+                tableBody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:red;">Error loading data</td></tr>';
+                return;
+            }
+
+            const users = await response.json();
+            console.log('pending users response', users);
+
+            // update sidebar badge count
+            const navBtn = document.getElementById('pendingNavBtn');
+            if (navBtn) {
+                const baseText = 'Pending Verifications';
+                navBtn.innerHTML = `<i class="fas fa-hourglass-half"></i> ${baseText} (${users.length})`;
+            }
+
+            tableBody.innerHTML = ''; // Clear list
+
+            if (users.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="4">No pending registrations.</td></tr>';
+                return;
+            }
+
+            users.forEach(user => {
+                const row = `
+                    <tr class="pending-row">
+                        <td>${user.name}</td>
+                        <td>${user.student_id}</td>
+                        <td>${user.email}</td>
+                        <td>
+                            <button class="btn-action btn-plus" onclick="approveUser(${user.id})">
+                                Verify <i class="fas fa-check"></i>
+                            </button>
+                            <button class="btn-action btn-minus" onclick="disapproveUser(${user.id})">
+                                Reject <i class="fas fa-times"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                tableBody.innerHTML += row;
+            });
+        } catch (error) {
+            console.error("Error loading pending users:", error);
+            alert('Error fetching pending users; check console.');
+            tableBody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:red;">Fetch error</td></tr>';
+        }
+    };
+
+// --- NEW FUNCTION: Approve User ---
+window.approveUser = async function(id) {
+    if(!confirm("Are you sure this is a real student?")) return;
+
     const token = localStorage.getItem('auth_token');
+    if (!token) {
+        alert('You are not logged in.');
+        return;
+    }
 
+    const resp = await fetch(`http://127.0.0.1:8000/api/approve-user/${id}`, {
+        method: 'PUT',
+        headers: {
+            'Accept': 'application/json',
+            'Authorization': 'Bearer ' + token
+        }
+    });
+
+    if (!resp.ok) {
+        alert('Failed to approve user');
+        return;
+    }
+    
+    alert("Student Verified!");
+    window.fetchPendingUsers(); // Refresh the list
+};
+
+// delete/disapprove pending user
+window.disapproveUser = async function(id) {
+    if(!confirm("Reject this registration? This will remove the user account.")) return;
+    const token = localStorage.getItem('auth_token');
+    if (!token) { alert('Not logged in.'); return; }
     try {
-        const response = await fetch(`${AUTH_URL}/pending-users`, {
-            method: 'GET',
-            // 3. SEND THE KEY (The Missing Part!)
+        const resp = await fetch(`http://127.0.0.1:8000/api/admin/users/${id}`, {
+            method: 'DELETE',
             headers: {
-                'Authorization': `Bearer ${token}`, 
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
+                'Accept': 'application/json',
+                'Authorization': 'Bearer ' + token
             }
         });
-
-        // Check if the token is invalid (Expired or Fake)
-        if (response.status === 401) {
-            console.error("Token invalid. Logging out...");
-            logout(); // Force logout if token is bad
+        if (!resp.ok) {
+            alert('Failed to reject user');
             return;
         }
-
-        const users = await response.json();
-
-        // 4. Update the Notification Badge (Red number)
-        if (badge) {
-            badge.innerText = users.length;
-            badge.style.display = users.length > 0 ? 'inline-block' : 'none';
-        }
-
-        // 5. Update the Table
-        tableBody.innerHTML = ''; 
-        
-        if (users.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="4" style="text-align:center;">No pending registrations.</td></tr>';
-            return;
-        }
-
-        users.forEach(user => {
-            const row = `
-                <tr>
-                    <td>${user.name}</td>
-                    <td>${user.student_id}</td>
-                    <td>${user.email}</td>
-                    <td>
-                        <button class="btn-action btn-plus" onclick="approveUser(${user.id})" title="Approve Student">
-                            Verify <i class="fas fa-check"></i>
-                        </button>
-                    </td>
-                </tr>
-            `;
-            tableBody.innerHTML += row;
-        });
-
-    } catch (error) {
-        console.error("Error loading pending users:", error);
+        alert('User registration rejected');
+        window.fetchPendingUsers();
+    } catch(err) {
+        console.error('Error deleting pending user', err);
+        alert('Error rejecting user');
     }
-}
+};
+
 });

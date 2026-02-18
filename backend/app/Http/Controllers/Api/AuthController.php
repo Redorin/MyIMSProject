@@ -12,70 +12,61 @@ class AuthController extends Controller
 {
     // 1. REGISTER (Create new user)
     public function register(Request $request)
-    {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'student_id' => ['required','string','unique:users,student_id', 'regex:/^\d{2}-\d{4}-\d{3}$/'],
-            'password' => 'required|string|min:8',
-        ]);
+{
+    $validated = $request->validate([
+        'name' => 'required|string|max:255',
+        'student_id' => 'required|string|max:20', // New Field
+        'email' => 'required|string|email|max:255|unique:users',
+        'password' => 'required|string|min:8',
+    ]);
 
-        // create user with pending status
-        $user = User::create([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'student_id' => $validated['student_id'],
-            'password' => Hash::make($validated['password']),
-            'status' => 'pending',
-        ]);
+    $user = User::create([
+        'name' => $validated['name'],
+        'student_id' => $validated['student_id'],
+        'email' => $validated['email'],
+        'password' => Hash::make($validated['password']),
+        'role' => 'student', // Default role is student
+        'is_approved' => false, // Explicitly set to false
+    ]);
 
-        // do not auto-sign in; the account requires admin approval
-        return response()->json([
-            'message' => 'Account created successfully. Your account is pending approval by an administrator.',
-            'user' => $user,
-            'is_admin' => ($user->email === 'admin@campus.edu')
-        ], 201);
-    }
+    // Note: We DO NOT create a token here anymore.
+    return response()->json([
+        'message' => 'Registration successful! Please wait for Admin approval before logging in.',
+    ], 201);
+}
 
     // 2. LOGIN (Check credentials)
     public function login(Request $request)
-    {
-        $request->validate([
-            'email' => 'required|email',
-            'password' => 'required',
-        ]);
+{
+    $request->validate([
+        'email' => 'required|email',
+        'password' => 'required',
+    ]);
 
-        $user = User::where('email', $request->email)->first();
+    $user = User::where('email', $request->email)->first();
 
-        // Check if user exists AND password is correct
-        if (! $user || ! Hash::check($request->password, $user->password)) {
-            return response()->json([
-                'message' => 'Invalid login credentials'
-            ], 401);
-        }
-
-        // refuse login if not approved
-        if ($user->status !== 'approved') {
-            $msg = $user->status === 'rejected'
-                    ? 'Your account request was rejected. Please contact support.'
-                    : 'Your account is still pending approval.';
-
-            return response()->json([
-                'message' => $msg
-            ], 403);
-        }
-
-        // Issue a new token
-        $token = $user->createToken('auth_token')->plainTextToken;
-
-        return response()->json([
-            'message' => 'Login successful',
-            'access_token' => $token,
-            'token_type' => 'Bearer',
-            'user' => $user,
-            'is_admin' => ($user->email === 'admin@campus.edu')
-        ]);
+    if (!$user || !Hash::check($request->password, $user->password)) {
+        return response()->json(['message' => 'Invalid login credentials'], 401);
     }
+
+    // --- NEW LOGIC: SEPARATE ADMIN VS STUDENT ---
+
+    // If it is a STUDENT, check if they are approved
+    if ($user->role === 'student' && $user->is_approved == false) {
+        return response()->json(['message' => 'Your account is pending approval. Please wait for an Admin.'], 403);
+    }
+
+    // If it is an ADMIN, they skip the check and login immediately.
+
+    $token = $user->createToken('auth_token')->plainTextToken;
+
+    return response()->json([
+        'access_token' => $token,
+        'token_type' => 'Bearer',
+        'role' => $user->role, // Send role to frontend so we can redirect them
+        'user' => $user
+    ]);
+}
     
     // 3. LOGOUT (Destroy token)
     public function logout(Request $request)
@@ -130,12 +121,23 @@ class AuthController extends Controller
         return response()->json(['message' => 'Password changed successfully']);
     }
 
-    // FIND THIS IN AuthController.php
-    public function pendingUsers()
-    {
-        // CHANGE 'false' to '0' (Better for MySQL)
-        $users = User::where('is_approved', 0)->get(); 
-        
-        return response()->json($users);
+    // 4. GET PENDING USERS (For Admin Dashboard)
+public function pendingUsers()
+{
+    // Get all users who are NOT approved
+    $users = User::where('is_approved', false)->get();
+    return response()->json($users);
+}
+
+// 5. APPROVE USER (For Admin Button)
+public function approveUser($id)
+{
+    $user = User::find($id);
+    if ($user) {
+        $user->is_approved = true;
+        $user->save();
+        return response()->json(['message' => 'User approved successfully!']);
     }
+    return response()->json(['message' => 'User not found'], 404);
+}
 }

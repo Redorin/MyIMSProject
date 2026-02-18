@@ -168,6 +168,30 @@
             font-size: 0.85rem;
             border: none;
             border-radius: 6px;
+        }
+
+        /* admin action buttons used on tables */
+        .btn-action {
+            padding: 5px 12px;
+            margin: 0 2px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            color: white;
+            font-size: 1.1rem;
+        }
+
+        .btn-plus { background-color: #28a745; }
+        .btn-plus:hover { background-color: #218838; }
+
+        .btn-minus { background-color: #dc3545; }
+        .btn-minus:hover { background-color: #c82333; }
+
+        /* highlight pending rows */
+        .pending-row td {
+            background-color: #fffceb;
+        }
             cursor: pointer;
             transition: all 0.2s;
             margin-right: 0.5rem;
@@ -336,27 +360,20 @@
     </style>
     <script>
         // Define functions early so onclick handlers can find them
-        // ensure base API url is correct for admin routes; app.js may have pointed to /api/spaces
-        if (typeof API_URL === 'undefined' || API_URL.endsWith('/spaces')) {
-            API_URL = 'http://127.0.0.1:8000/api';
-        }
+        const API_URL = 'http://127.0.0.1:8000/api';
         const AUTH_TOKEN = localStorage.getItem('auth_token');
 
         window.switchSection = function(section, button) {
-            // show selected section and update nav active state
             document.querySelectorAll('.admin-section').forEach(el => el.classList.remove('active'));
             document.getElementById(section).classList.add('active');
             document.querySelectorAll('.admin-nav-item').forEach(el => el.classList.remove('active'));
-            if (button) button.classList.add('active');
-            // update page title and hash
+            button.classList.add('active');
             const titles = { 'dashboard': 'Dashboard', 'spaces': 'Manage Spaces', 'users': 'Manage Users', 'pending': 'Pending Verifications', 'activity': 'Activity Logs' };
-            document.getElementById('sectionTitle').textContent = titles[section] || '';
-            window.location.hash = section;
-            // load data if needed
+            document.getElementById('sectionTitle').textContent = titles[section];
             if (section === 'dashboard') window.loadDashboard();
             if (section === 'spaces') window.loadSpaces();
             if (section === 'users') window.loadUsers();
-            if (section === 'pending') window.loadPending();
+            if (section === 'pending' && window.fetchPendingUsers) window.fetchPendingUsers();
             if (section === 'activity') window.loadActivityLogs();
         };
 
@@ -428,7 +445,7 @@
                 <button class="admin-nav-item" onclick="switchSection('users', this)">
                     <i class="fas fa-users"></i> Users
                 </button>
-                <button class="admin-nav-item" onclick="switchSection('pending', this)">
+                <button id="pendingNavBtn" class="admin-nav-item" onclick="switchSection('pending', this)">
                     <i class="fas fa-hourglass-half"></i> Pending Verifications
                 </button>
                 <button class="admin-nav-item" onclick="switchSection('activity', this)">
@@ -450,12 +467,14 @@
                 </div>
             </div>
 
+
+
             <!-- Dashboard Section -->
             <div id="dashboard" class="admin-section active">
                 <div class="stats-grid" id="statsGrid">
                     <!-- Populated by JS -->
                 </div>
-
+                <!-- Quick view moved inside dashboard -->
                 <div class="admin-table-container">
                     <h3>Quick View: All Spaces</h3>
                     <table class="admin-table">
@@ -474,9 +493,9 @@
             </div>
 
             <!-- Pending Verifications Section -->
-            <div id="pending" class="admin-section" style="display:none;">
+            <div id="pending" class="admin-section">
                 <div class="admin-table-container">
-                    <h3>Pending Student Verifications</h3>
+                    <h3>⏳ Pending Student Verifications</h3>
                     <table class="admin-table" id="pendingTable">
                         <thead>
                             <tr>
@@ -486,9 +505,7 @@
                                 <th>Actions</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <!-- to be populated by JS -->
-                        </tbody>
+                        <tbody id="pendingUsersTable"></tbody>
                     </table>
                 </div>
             </div>
@@ -525,9 +542,7 @@
                         <thead>
                             <tr>
                                 <th>Name</th>
-                                <th>Student ID</th>
                                 <th>Email</th>
-                                <th>Status</th>
                                 <th>Created At</th>
                                 <th>Actions</th>
                             </tr>
@@ -617,18 +632,14 @@
                     </div>
                 `;
 
-                // Load quick space view using same logic as fetchSpaces()
-                let spacesUrl = API_URL;
-                if (spacesUrl.endsWith('/api')) {
-                    spacesUrl += '/spaces';
-                } else {
-                    // if it already pointed at /api/spaces leave it
-                }
-                const spacesRes = await fetch(spacesUrl);
+                // Load quick space view
+                const spacesRes = await fetch(`${API_URL}/spaces`);
+                
                 if (!spacesRes.ok) {
-                    console.error('Spaces response not ok:', spacesRes.status, 'url=', spacesUrl);
+                    console.error('Spaces response not ok:', spacesRes.status);
                     return;
                 }
+                
                 const spaces = await spacesRes.json();
                 console.log('Spaces:', spaces);
 
@@ -646,12 +657,7 @@
                 }
             } catch (error) {
                 console.error('Error loading dashboard:', error);
-                // give more context if it's a network failure
-                let msg = error.message || 'Unknown error';
-                if (error.name === 'TypeError' && msg === 'Failed to fetch') {
-                    msg = 'Network error when contacting API. Is the backend running?';
-                }
-                alert('Error loading dashboard: ' + msg);
+                alert('Error loading dashboard: ' + error.message);
             }
         }
 
@@ -710,9 +716,7 @@
                     tbody.innerHTML = users.map(user => `
                         <tr>
                             <td>${user.name}</td>
-                            <td>${user.student_id || ''}</td>
                             <td>${user.email}</td>
-                            <td>${user.status}</td>
                             <td>${new Date(user.created_at).toLocaleDateString()}</td>
                             <td>
                                 <button class="btn-sm btn-delete" onclick="deleteUser(${user.id})">
@@ -726,75 +730,6 @@
                 }
             } catch (error) {
                 console.error('Error loading users:', error);
-            }
-        }
-
-        // Load pending verifications
-        window.loadPending = async function() {
-            console.log('loadPending called, API_URL=', API_URL);
-            try {
-                const res = await fetch(`${API_URL}/admin/pending-users`, {
-                    headers: { 'Authorization': `Bearer ${AUTH_TOKEN}` }
-                });
-                console.log('pending-users response status', res.status);
-                if (!res.ok) {
-                    console.error('Pending response not ok', res.status);
-                    return;
-                }
-                const students = await res.json();
-                console.log('Pending students:', students);
-                const tbody = document.querySelector('#pendingTable tbody');
-                if (students && students.length > 0) {
-                    tbody.innerHTML = students.map(u => `
-                        <tr>
-                            <td>${u.name}</td>
-                            <td>${u.student_id || ''}</td>
-                            <td>${u.email}</td>
-                            <td>
-                                <button class="btn-sm btn-edit" onclick="approveUser(${u.id})">Approve</button>
-                                <button class="btn-sm btn-delete" onclick="rejectUser(${u.id})">Reject</button>
-                            </td>
-                        </tr>
-                    `).join('');
-                } else {
-                    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:1rem;">No pending requests</td></tr>';
-                }
-            } catch (err) {
-                console.error('Error loading pending users:', err);
-            }
-        }
-
-        window.approveUser = async function(id) {
-            try {
-                const res = await fetch(`${API_URL}/admin/users/${id}/approve`, {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${AUTH_TOKEN}` }
-                });
-                if (res.ok) {
-                    alert('User approved');
-                    window.loadPending();
-                } else {
-                    alert('Failed to approve');
-                }
-            } catch (err) {
-                console.error(err);
-            }
-        }
-
-        window.rejectUser = async function(id) {
-            try {
-                const res = await fetch(`${API_URL}/admin/users/${id}/reject`, {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${AUTH_TOKEN}` }
-                });
-                if (res.ok) {
-                    alert('User rejected');
-                    window.loadPending();
-                } else {
-                    alert('Failed to reject');
-                }
-            } catch (err) {
-                console.error(err);
             }
         }
 
@@ -867,17 +802,8 @@
             }
         });
 
-        // Initial load - show section from hash if present
-        window.addEventListener('load', () => {
-            const hash = window.location.hash.replace('#','');
-            const valid = ['dashboard','spaces','users','pending','activity'];
-            if (hash && valid.includes(hash)) {
-                const button = document.querySelector(`.admin-nav-item[onclick*="'${hash}'"]`);
-                window.switchSection(hash, button);
-            } else {
-                window.switchSection('dashboard', document.querySelector('.admin-nav-item.active'));
-            }
-        });
+        // Initial load
+        window.addEventListener('load', window.loadDashboard);
     </script>
 </body>
 </html>
