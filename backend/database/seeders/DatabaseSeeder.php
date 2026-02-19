@@ -21,6 +21,8 @@ class DatabaseSeeder extends Seeder
         'email' => 'student@campus.edu',
         'student_id' => '12-3456-789',
         'status' => 'approved',
+        'role' => 'student',
+        'is_approved' => true,
         'password' => Hash::make('password123'), // Securely hashed
     ]);
 
@@ -30,6 +32,8 @@ class DatabaseSeeder extends Seeder
         'email' => 'admin@campus.edu',
         'password' => Hash::make('admin123'),
         'status' => 'approved',
+        'role' => 'admin',
+        'is_approved' => true,
     ]);
 
     $this->call(SpaceSeeder::class);

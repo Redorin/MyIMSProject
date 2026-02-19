@@ -26,6 +26,8 @@ class User extends Authenticatable
         'preferences',
         'password',
         'status', // pending/approved/rejected
+        'role',
+        'is_approved',
     ];
 
     /**
@@ -48,5 +50,6 @@ class User extends Authenticatable
         'password' => 'hashed',
         'preferences' => 'array',
         'status' => 'string',
+        'is_approved' => 'boolean',
     ];
 }
