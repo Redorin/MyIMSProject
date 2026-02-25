@@ -7,33 +7,41 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Storage;
 
 class AuthController extends Controller
 {
     // 1. REGISTER (Create new user)
     public function register(Request $request)
-{
-    $validated = $request->validate([
-        'name' => 'required|string|max:255',
-        'student_id' => 'required|string|max:20', // New Field
-        'email' => 'required|string|email|max:255|unique:users',
-        'password' => 'required|string|min:8',
-    ]);
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            // student ID format ##-####-###
+            'student_id' => ['required','string','max:20','regex:/^\d{2}-\d{4}-\d{3}$/'],
+            'email' => 'required|string|email|max:255|unique:users',
+            'password' => 'required|string|min:8',
+            // require front-of-ID image during registration
+            'id_card_image' => 'required|image|max:2048',
+        ]);
 
-    $user = User::create([
-        'name' => $validated['name'],
-        'student_id' => $validated['student_id'],
-        'email' => $validated['email'],
-        'password' => Hash::make($validated['password']),
-        'role' => 'student', // Default role is student
-        'is_approved' => false, // Explicitly set to false
-    ]);
+        // store file on public disk; path will be used when displaying later
+        $path = $request->file('id_card_image')->store('id_cards', 'public');
 
-    // Note: We DO NOT create a token here anymore.
-    return response()->json([
-        'message' => 'Registration successful! Please wait for Admin approval before logging in.',
-    ], 201);
-}
+        $user = User::create([
+            'name' => $validated['name'],
+            'student_id' => $validated['student_id'],
+            'email' => $validated['email'],
+            'password' => Hash::make($validated['password']),
+            'role' => 'student', // Default role is student
+            'is_approved' => false, // Explicitly set to false
+            'id_card_image' => $path,
+        ]);
+
+        // Note: We DO NOT create a token here anymore.
+        return response()->json([
+            'message' => 'Registration successful! Please wait for Admin approval before logging in.',
+        ], 201);
+    }
 
     // 2. LOGIN (Check credentials)
     public function login(Request $request)

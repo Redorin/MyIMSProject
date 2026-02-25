@@ -28,6 +28,7 @@ class User extends Authenticatable
         'status', // pending/approved/rejected
         'role',
         'is_approved',
+        'id_card_image',
     ];
 
     /**
@@ -51,5 +52,6 @@ class User extends Authenticatable
         'preferences' => 'array',
         'status' => 'string',
         'is_approved' => 'boolean',
+        'id_card_image' => 'string',
     ];
 }
