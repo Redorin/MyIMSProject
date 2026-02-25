@@ -397,47 +397,116 @@
             document.getElementById('spaceModal').classList.remove('active');
         };
 
-        window.deleteSpace = async function(id) {
-            if (!confirm('Are you sure you want to delete this space?')) return;
-            try {
-                const res = await fetch(`${API_URL}/admin/spaces/${id}`, {
-                    method: 'DELETE',
-                    headers: { 'Authorization': `Bearer ${AUTH_TOKEN}` }
-                });
-                if (res.ok) {
-                    alert('Space deleted successfully!');
-                    window.loadSpaces();
-                } else {
-                    alert('Failed to delete space');
-                }
-            } catch (error) {
-                console.error('Error deleting space:', error);
+        window.deleteSpace = function(id) {
+    uiConfirm('Are you sure you want to delete this space?', async () => {
+        try {
+            const res = await fetch(`${API_URL}/admin/spaces/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${AUTH_TOKEN}` }
+            });
+            if (res.ok) {
+                uiAlert('Space deleted successfully!');
+                window.loadSpaces();
+            } else {
+                uiAlert('Failed to delete space', 'Error');
             }
-        };
+        } catch (error) {
+            console.error('Error deleting space:', error);
+        }
+    });
+};
 
-        window.deleteUser = async function(id) {
-            if (!confirm('Are you sure you want to delete this user?')) return;
-            try {
-                const res = await fetch(`${API_URL}/admin/users/${id}`, {
-                    method: 'DELETE',
-                    headers: { 'Authorization': `Bearer ${AUTH_TOKEN}` }
-                });
-                if (res.ok) {
-                    alert('User deleted successfully!');
-                    window.loadUsers();
-                } else {
-                    alert('Failed to delete user');
-                }
-            } catch (error) {
-                console.error('Error deleting user:', error);
+window.uiPrompt = function(message, onConfirm) {
+    document.getElementById('uiModalTitle').textContent = 'Input Required';
+    document.getElementById('uiModalBody').textContent = message;
+    
+    // Show the input field and reset it
+    const inputContainer = document.getElementById('uiModalInputContainer');
+    const inputField = document.getElementById('uiModalInput');
+    inputContainer.style.display = 'block';
+    inputField.value = '';
+
+    document.getElementById('uiModalCloseBtn').style.display = 'none';
+    document.getElementById('uiModalCancelBtn').style.display = 'block';
+    
+    const confirmBtn = document.getElementById('uiModalConfirmBtn');
+    confirmBtn.style.display = 'block';
+    confirmBtn.textContent = 'Submit';
+    confirmBtn.className = 'btn-action btn-plus';
+
+    document.getElementById('uiModal').classList.add('active');
+
+    confirmBtn.onclick = () => {
+        const val = inputField.value.trim();
+        if (!val) {
+            inputField.style.borderColor = 'red';
+            return;
+        }
+        onConfirm(val);
+        closeUiModal();
+    };
+};
+
+// Update closeUiModal to hide the input container for future alerts
+const originalClose = window.closeUiModal;
+window.closeUiModal = function() {
+    document.getElementById('uiModalInputContainer').style.display = 'none';
+    originalClose();
+};
+
+        window.deleteUser = function(id) {
+    uiConfirm('Are you sure you want to delete this user?', async () => {
+        try {
+            const res = await fetch(`${API_URL}/admin/users/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${AUTH_TOKEN}` }
+            });
+            if (res.ok) {
+                uiAlert('User deleted successfully!');
+                window.loadUsers();
+            } else {
+                uiAlert('Failed to delete user', 'Error');
             }
-        };
+        } catch (error) {
+            console.error('Error deleting user:', error);
+        }
+    });
+};
 
         window.logout = function() {
             localStorage.removeItem('auth_token');
             localStorage.removeItem('user_name');
             window.location.href = 'index.html';
         };
+
+        window.uiAlert = function(message, title = 'Notification') {
+    document.getElementById('uiModalTitle').textContent = title;
+    document.getElementById('uiModalBody').textContent = message;
+    document.getElementById('uiModalCloseBtn').style.display = 'block';
+    document.getElementById('uiModalConfirmBtn').style.display = 'none';
+    document.getElementById('uiModalCancelBtn').style.display = 'none';
+    document.getElementById('uiModal').classList.add('active');
+};
+
+window.uiConfirm = function(message, onConfirm) {
+    document.getElementById('uiModalTitle').textContent = 'Are you sure?';
+    document.getElementById('uiModalBody').textContent = message;
+    document.getElementById('uiModalCloseBtn').style.display = 'none';
+    document.getElementById('uiModalConfirmBtn').style.display = 'block';
+    document.getElementById('uiModalCancelBtn').style.display = 'block';
+    document.getElementById('uiModal').classList.add('active');
+
+    // Handle the confirm button click once
+    const confirmBtn = document.getElementById('uiModalConfirmBtn');
+    confirmBtn.onclick = () => {
+        onConfirm();
+        closeUiModal();
+    };
+};
+
+window.closeUiModal = function() {
+    document.getElementById('uiModal').classList.remove('active');
+};
     </script>
 </head>
 <body>
@@ -504,22 +573,38 @@
 
             <!-- Pending Verifications Section -->
             <div id="pending" class="admin-section">
-                <div class="admin-table-container">
-                    <h3>⏳ Pending Student Verifications</h3>
-                    <table class="admin-table" id="pendingTable">
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Student ID</th>
-                                <th>Email</th>
-                                <th>ID Card</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="pendingUsersTable"></tbody>
-                    </table>
-                </div>
-            </div>
+    <div class="admin-table-container">
+        <h3>⏳ Pending Student Verifications</h3>
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Student ID</th>
+                    <th>Email</th>
+                    <th>ID Card</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="pendingUsersTable"></tbody>
+        </table>
+    </div>
+
+    <div class="admin-table-container" style="margin-top: 2rem; border-top: 4px solid #ef4444;">
+        <h3 style="color: #ef4444;">❌ Rejected Student Verifications</h3>
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Student ID</th>
+                    <th>Reason for Rejection</th>
+                    <th>ID Card</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="rejectedUsersTable"></tbody>
+        </table>
+    </div>
+</div>
 
             <!-- Spaces Section -->
             <div id="spaces" class="admin-section">
@@ -668,7 +753,7 @@
                 }
             } catch (error) {
                 console.error('Error loading dashboard:', error);
-                alert('Error loading dashboard: ' + error.message);
+                uiAlert('Could not load dashboard stats', 'Connection Error');
             }
         }
 
@@ -679,6 +764,7 @@
                 
                 if (!res.ok) {
                     console.error('Spaces response not ok:', res.status);
+                    uiAlert('Could not load spaces list', 'Connection Error');
                     return;
                 }
                 
@@ -794,7 +880,7 @@
                 });
 
                 if (res.ok) {
-                    alert('Space created successfully!');
+                    uiAlert('Space created successfully!');
                     try {
                         const spacesChannel = new BroadcastChannel('campus_spaces');
                         spacesChannel.postMessage({ type: 'spaces_updated', timestamp: Date.now() });
@@ -806,7 +892,7 @@
                     closeSpaceModal();
                     loadSpaces();
                 } else {
-                    alert('Failed to create space');
+                    uiAlert('Failed to create space', 'Error');
                 }
             } catch (error) {
                 console.error('Error creating space:', error);
@@ -820,6 +906,27 @@
     <div id="imageModal" class="modal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); overflow: auto;">
     <span style="position: absolute; top: 20px; right: 35px; color: #fff; font-size: 40px; font-weight: bold; cursor: pointer;" onclick="closeModal()">&times;</span>
     <img id="modalImage" style="margin: auto; display: block; width: 80%; max-width: 800px; padding-top: 60px;">
+</div>
+<div id="uiModal" class="modal">
+    <div class="modal-content" style="max-width: 400px; text-align: center;">
+        <div class="modal-header">
+            <span id="uiModalTitle">Notification</span>
+            <button class="modal-close" onclick="closeUiModal()">&times;</button>
+        </div>
+        <div id="uiModalBody" style="margin: 1.5rem 0; color: #64748b;">
+            </div>
+        
+        <div id="uiModalInputContainer" style="display: none; margin-bottom: 1.5rem;">
+            <textarea id="uiModalInput" placeholder="Enter reason here..." 
+                style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0; resize: none;" rows="3"></textarea>
+        </div>
+
+        <div class="modal-footer" id="uiModalFooter">
+            <button id="uiModalCloseBtn" class="btn-primary" onclick="closeUiModal()" style="display: none;">OK</button>
+            <button id="uiModalCancelBtn" class="btn-secondary" onclick="closeUiModal()" style="display: none;">Cancel</button>
+            <button id="uiModalConfirmBtn" class="btn-plus" style="display: none;">Confirm</button>
+        </div>
+    </div>
 </div>
 </body>
 </html>

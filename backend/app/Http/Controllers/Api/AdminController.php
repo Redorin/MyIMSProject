@@ -75,22 +75,30 @@ class AdminController extends Controller
     }
 
     // Delete a user
-    public function deleteUser($id)
-    {
-        $this->ensureAdmin();
-        $user = User::findOrFail($id);
-        
-        // Log the action
-        ActivityLog::create([
-            'user_id' => auth()->id(),
-            'action' => 'deleted',
-            'target_model' => 'User',
-            'target_id' => $id,
-            'description' => "Deleted user: {$user->name} ({$user->email})"
-        ]);
+    // Delete a user
+public function deleteUser($id)
+{
+    $this->ensureAdmin();
+    $user = User::findOrFail($id);
+    
+    // Save the info for the log before deleting
+    $userName = $user->name;
+    $userEmail = $user->email;
 
-        return response()->json(['message' => 'User deleted successfully']);
-    }
+    // --- ADD THIS LINE ---
+    $user->delete(); 
+
+    // Log the action
+    ActivityLog::create([
+        'user_id' => auth()->id(),
+        'action' => 'deleted',
+        'target_model' => 'User',
+        'target_id' => $id,
+        'description' => "Deleted user: {$userName} ({$userEmail})"
+    ]);
+
+    return response()->json(['message' => 'User deleted successfully']);
+}
 
     // Create a new space
     public function createSpace(Request $request)

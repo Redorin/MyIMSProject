@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
+use App\Models\ActivityLog;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
 class AuthController extends Controller
@@ -137,39 +139,69 @@ class AuthController extends Controller
     }
 
     // 4. GET PENDING USERS (For Admin Dashboard)
+// 1. Update Pending Users (only status 'pending')
 public function pendingUsers()
 {
-    // Get all users who are NOT approved
-    $users = User::where('is_approved', false)->get();
+    $users = User::where('status', 'pending')
+                 ->where('is_approved', false)
+                 ->get();
     return response()->json($users);
 }
 
-// 5. APPROVE USER (For Admin Button)
-public function approveUser($id)
+// 2. Add Rejected Users function
+public function rejectedUsers()
 {
-    $user = User::find($id);
-    if ($user) {
-        $user->is_approved = true;
-        $user->save();
-        return response()->json(['message' => 'User approved successfully!']);
-    }
-    return response()->json(['message' => 'User not found'], 404);
+    $users = User::where('status', 'rejected')->get();
+    return response()->json($users);
 }
 
+// 3. Update the Reject function (ensure it sets the status)
 public function rejectUser(Request $request, $id)
-{
-    $request->validate([
-        'reason' => 'required|string|max:500'
-    ]);
+    {
+        $request->validate([
+            'reason' => 'required|string|max:500'
+        ]);
 
-    $user = User::find($id);
-    if ($user) {
-        $user->status = 'rejected';
-        $user->is_approved = false;
-        $user->rejection_reason = $request->reason;
-        $user->save();
-        return response()->json(['message' => 'User rejected with reason.']);
+        $user = User::find($id);
+        if ($user) {
+            $user->status = 'rejected';
+            $user->is_approved = false;
+            $user->rejection_reason = $request->reason;
+            $user->save();
+
+            // 4. Create Activity Log
+            ActivityLog::create([
+                'user_id' => auth()->id(),
+                'action' => 'rejected',
+                'target_model' => 'User',
+                'target_id' => $id,
+                'description' => "Rejected user: {$user->name}. Reason: {$request->reason}"
+            ]);
+
+            return response()->json(['message' => 'User rejected and logged.']);
+        }
+        return response()->json(['message' => 'User not found'], 404);
     }
-    return response()->json(['message' => 'User not found'], 404);
-}
+
+    public function approveUser($id)
+    {
+        $user = User::find($id);
+        if ($user) {
+            $user->is_approved = true;
+            $user->status = 'approved'; // Sync status
+            $user->save();
+
+            // 3. Create Activity Log
+            ActivityLog::create([
+                'user_id' => auth()->id(),
+                'action' => 'approved',
+                'target_model' => 'User',
+                'target_id' => $id,
+                'description' => "Approved user: {$user->name} ({$user->email})"
+            ]);
+
+            return response()->json(['message' => 'User approved successfully!']);
+        }
+        return response()->json(['message' => 'User not found'], 404);
+    }
 }

@@ -29,7 +29,7 @@ window.redirect = function(page) {
 // We define this OUTSIDE the event listener so HTML buttons can find it.
 window.modifyOccupancy = async function(id, currentVal, change) {
     let newVal = parseInt(currentVal) + change;
-    if (newVal < 0) newVal = 0; // Prevent negative numbers
+    if (newVal < 0) newVal = 0; 
 
     try {
         const response = await fetch(`${SPACES_API_URL}/${id}`, {
@@ -42,13 +42,14 @@ window.modifyOccupancy = async function(id, currentVal, change) {
         });
 
         if (response.ok) {
-            // Success! Reload to see change immediately
             location.reload(); 
         } else {
-            alert("Failed to update.");
+            // Updated to use custom UI alert
+            uiAlert("Failed to update occupancy levels.", "Error");
         }
     } catch (error) {
         console.error("Error updating:", error);
+        uiAlert("A server error occurred while updating occupancy.");
     }
 };
 
@@ -147,15 +148,17 @@ document.addEventListener('DOMContentLoaded', () => {
     updateUserMenu();
 
     // Handle save buttons
-    const saveBtns = document.querySelectorAll('.form-actions .btn-primary');
-    saveBtns.forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            if (this.textContent.includes('Save')) {
-                e.preventDefault();
-                alert('Changes saved successfully!');
-            }
-        });
+    // Locate the save button handler inside DOMContentLoaded
+const saveBtns = document.querySelectorAll('.form-actions .btn-primary');
+saveBtns.forEach(btn => {
+    btn.addEventListener('click', function(e) {
+        if (this.textContent.includes('Save')) {
+            e.preventDefault();
+            // Updated to use custom UI alert
+            uiAlert('Your changes have been saved successfully!', 'Success');
+        }
     });
+});
 
     // --- FETCH DATA (The Traffic Cop) ---
     async function fetchSpaces() {
@@ -450,59 +453,59 @@ document.addEventListener('DOMContentLoaded', () => {
 };
 
 // --- NEW FUNCTION: Approve User ---
-window.approveUser = async function(id) {
-    if(!confirm("Are you sure this is a real student?")) return;
+window.approveUser = function(id) {
+    uiConfirm("Are you sure this is a real student?", async () => {
+        const token = localStorage.getItem('auth_token');
+        if (!token) {
+            uiAlert('You are not logged in.', 'Error');
+            return;
+        }
 
-    const token = localStorage.getItem('auth_token');
-    if (!token) {
-        alert('You are not logged in.');
-        return;
-    }
+        try {
+            const resp = await fetch(`http://127.0.0.1:8000/api/approve-user/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Accept': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                }
+            });
 
-    const resp = await fetch(`http://127.0.0.1:8000/api/approve-user/${id}`, {
-        method: 'PUT',
-        headers: {
-            'Accept': 'application/json',
-            'Authorization': 'Bearer ' + token
+            if (resp.ok) {
+                uiAlert("Student Verified!", "Success");
+                window.fetchPendingUsers();
+            } else {
+                uiAlert('Failed to approve user', 'Error');
+            }
+        } catch (err) {
+            uiAlert('Error approving user');
         }
     });
-
-    if (!resp.ok) {
-        alert('Failed to approve user');
-        return;
-    }
-    
-    alert("Student Verified!");
-    window.fetchPendingUsers(); // Refresh the list
 };
 
 // delete/disapprove pending user
-window.disapproveUser = async function(id) {
-    const reason = prompt("Enter the reason for rejection (e.g., Blurry ID photo):");
-    
-    if (!reason) return; // Cancel if no reason is given
+window.disapproveUser = function(id) {
+    uiPrompt("Please provide a reason for rejecting this registration:", async (reason) => {
+        const token = localStorage.getItem('auth_token');
+        try {
+            const resp = await fetch(`http://127.0.0.1:8000/api/reject-user/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify({ reason: reason })
+            });
 
-    const token = localStorage.getItem('auth_token');
-    try {
-        const resp = await fetch(`http://127.0.0.1:8000/api/reject-user/${id}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'Authorization': 'Bearer ' + token
-            },
-            body: JSON.stringify({ reason: reason })
-        });
-
-        if (resp.ok) {
-            alert('User registration rejected.');
-            window.fetchPendingUsers(); // Refresh the list
-        } else {
-            alert('Failed to reject user.');
+            if (resp.ok) {
+                uiAlert('User registration rejected and moved to list.');
+                window.fetchPendingUsers();
+            } else {
+                uiAlert('Failed to reject user');
+            }
+        } catch(err) {
+            uiAlert('Error rejecting user');
         }
-    } catch(err) {
-        console.error('Error:', err);
-    }
+    });
 };
-
 });
