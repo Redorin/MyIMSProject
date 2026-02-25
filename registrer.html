@@ -85,9 +85,12 @@
                 form.append('id_card_image', idFile);
 
                 const response = await fetch(`${API_URL}/register`, {
-                    method: 'POST',
-                    body: form
-                });
+    method: 'POST',
+    headers: {
+        'Accept': 'application/json' // Add this header
+    },
+    body: form
+});
 
                 const data = await response.json();
 

@@ -53,6 +53,26 @@ window.modifyOccupancy = async function(id, currentVal, change) {
 };
 
 
+// Function to open the zoom modal
+window.openModal = function(src) {
+    const modal = document.getElementById('imageModal');
+    const modalImg = document.getElementById('modalImage');
+    modal.style.display = "block";
+    modalImg.src = src;
+};
+
+// Function to close the zoom modal
+window.closeModal = function() {
+    document.getElementById('imageModal').style.display = "none";
+};
+
+// Also close modal if they click outside the image
+window.onclick = function(event) {
+    const modal = document.getElementById('imageModal');
+    if (event.target == modal) {
+        modal.style.display = "none";
+    }
+};
 
 // --- 3. MAIN APP LOGIC ---
 document.addEventListener('DOMContentLoaded', () => {
@@ -354,71 +374,80 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- NEW FUNCTION: Fetch Pending Users ---
     // exposed globally so other scripts (e.g. switchSection) can call it
     window.fetchPendingUsers = async function() {
-        console.log('fetchPendingUsers called');
-        const tableBody = document.getElementById('pendingUsersTable');
-        if (!tableBody) return; // Only run on Admin page or when section exists
+    console.log('fetchPendingUsers called');
+    const tableBody = document.getElementById('pendingUsersTable');
+    if (!tableBody) return; 
 
-        // show spinner row
-        tableBody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Loading…</td></tr>';
+    // Updated colspan to 5 to account for the new ID Card column
+    tableBody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Loading…</td></tr>';
 
-        const token = localStorage.getItem('auth_token');
-        if (!token) {
-            console.warn('No auth token, cannot fetch pending users');
-            tableBody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:red;">Not authenticated</td></tr>';
+    const token = localStorage.getItem('auth_token');
+    const backendBaseUrl = 'http://127.0.0.1:8000'; // Define your backend URL
+
+    if (!token) {
+        console.warn('No auth token, cannot fetch pending users');
+        tableBody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:red;">Not authenticated</td></tr>';
+        return;
+    }
+
+    try {
+        const response = await fetch(`${backendBaseUrl}/api/pending-users`, {
+            headers: {
+                'Accept': 'application/json',
+                'Authorization': 'Bearer ' + token
+            }
+        });
+
+        if (!response.ok) {
+            console.error('Failed to load pending users', response.status, response.statusText);
+            tableBody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:red;">Error loading data</td></tr>';
             return;
         }
 
-        try {
-            const response = await fetch('http://127.0.0.1:8000/api/pending-users', {
-                headers: {
-                    'Accept': 'application/json',
-                    'Authorization': 'Bearer ' + token
-                }
-            });
+        const users = await response.json();
+        tableBody.innerHTML = ''; 
 
-            if (!response.ok) {
-                console.error('Failed to load pending users', response.status, response.statusText);
-                if (response.status === 401 || response.status === 403) {
-                    alert('You must be logged in as admin to view pending users.');
-                }
-                tableBody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:red;">Error loading data</td></tr>';
-                return;
-            }
-
-            const users = await response.json();
-            console.log('pending users response', users);
-
-            tableBody.innerHTML = ''; // Clear list
-
-            if (users.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="4">No pending registrations.</td></tr>';
-                return;
-            }
-
-            users.forEach(user => {
-                const row = `
-                    <tr>
-                        <td>${user.name}</td>
-                        <td>${user.student_id}</td>
-                        <td>${user.email}</td>
-                        <td>
-                            <button class="btn-action btn-plus" onclick="approveUser(${user.id})">
-                                Verify <i class="fas fa-check"></i>
-                            </button>
-                            <button class="btn-action btn-minus" onclick="disapproveUser(${user.id})">
-                                Reject <i class="fas fa-times"></i>
-                            </button>
-                        </td>
-                    </tr>
-                `;
-                tableBody.innerHTML += row;
-            });
-        } catch (error) {
-            console.error("Error loading pending users:", error);
-            alert('Error fetching pending users; check console.');
-            tableBody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:red;">Fetch error</td></tr>';
+        if (users.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 20px;">No pending registrations.</td></tr>';
+            return;
         }
-    };
+
+        users.forEach(user => {
+            // Construct the path to the public storage
+            const imageUrl = user.id_card_image 
+                ? `${backendBaseUrl}/storage/${user.id_card_image}` 
+                : 'https://via.placeholder.com/100x60?text=No+Image';
+
+            const row = `
+                <tr>
+                    <td>${user.name}</td>
+                    <td>${user.student_id}</td>
+                    <td>${user.email}</td>
+                    <td>
+                        
+    <img src="${imageUrl}" alt="ID Card" 
+         onclick="openModal('${imageUrl}')" 
+         style="width: 80px; height: 50px; object-fit: cover; border-radius: 4px; border: 1px solid #ddd; cursor: zoom-in;"
+         onerror="this.src='https://via.placeholder.com/100x60?text=Error+Loading'">
+</td>
+                    
+                    <td>
+                        <button class="btn-action btn-plus" onclick="approveUser(${user.id})">
+                            Verify <i class="fas fa-check"></i>
+                        </button>
+                        <button class="btn-action btn-minus" onclick="disapproveUser(${user.id})">
+                            Reject <i class="fas fa-times"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+            tableBody.innerHTML += row;
+        });
+    } catch (error) {
+        console.error("Error loading pending users:", error);
+        tableBody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:red;">Fetch error</td></tr>';
+    }
+};
 
 // --- NEW FUNCTION: Approve User ---
 window.approveUser = async function(id) {
