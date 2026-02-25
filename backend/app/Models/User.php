@@ -29,6 +29,7 @@ class User extends Authenticatable
         'role',
         'is_approved',
         'id_card_image',
+        'rejection_reason', // Add this line for the new column
     ];
 
     /**

@@ -478,26 +478,30 @@ window.approveUser = async function(id) {
 
 // delete/disapprove pending user
 window.disapproveUser = async function(id) {
-    if(!confirm("Reject this registration? This will remove the user account.")) return;
+    const reason = prompt("Enter the reason for rejection (e.g., Blurry ID photo):");
+    
+    if (!reason) return; // Cancel if no reason is given
+
     const token = localStorage.getItem('auth_token');
-    if (!token) { alert('Not logged in.'); return; }
     try {
-        const resp = await fetch(`http://127.0.0.1:8000/api/admin/users/${id}`, {
-            method: 'DELETE',
+        const resp = await fetch(`http://127.0.0.1:8000/api/reject-user/${id}`, {
+            method: 'PUT',
             headers: {
+                'Content-Type': 'application/json',
                 'Accept': 'application/json',
                 'Authorization': 'Bearer ' + token
-            }
+            },
+            body: JSON.stringify({ reason: reason })
         });
-        if (!resp.ok) {
-            alert('Failed to reject user');
-            return;
+
+        if (resp.ok) {
+            alert('User registration rejected.');
+            window.fetchPendingUsers(); // Refresh the list
+        } else {
+            alert('Failed to reject user.');
         }
-        alert('User registration rejected');
-        window.fetchPendingUsers();
     } catch(err) {
-        console.error('Error deleting pending user', err);
-        alert('Error rejecting user');
+        console.error('Error:', err);
     }
 };
 

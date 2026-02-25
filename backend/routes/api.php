@@ -34,5 +34,7 @@ Route::put('/approve-user/{id}', [AuthController::class, 'approveUser']);
     Route::delete('/admin/users/{id}', [AdminController::class, 'deleteUser']);
     Route::post('/admin/spaces', [AdminController::class, 'createSpace']);
     Route::delete('/admin/spaces/{id}', [AdminController::class, 'deleteSpace']);
+    Route::put('/admin/spaces/{id}', [AdminController::class, 'updateSpace']);
+    Route::put('/reject-user/{id}', [AuthController::class, 'rejectUser']);
     Route::get('/admin/activity-logs', [AdminController::class, 'getActivityLogs']);
 });

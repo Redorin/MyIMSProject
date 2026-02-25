@@ -60,9 +60,16 @@ class AuthController extends Controller
     // --- NEW LOGIC: SEPARATE ADMIN VS STUDENT ---
 
     // If it is a STUDENT, check if they are approved
-    if ($user->role === 'student' && $user->is_approved == false) {
-        return response()->json(['message' => 'Your account is pending approval. Please wait for an Admin.'], 403);
+    if ($user->role === 'student') {
+    if ($user->status === 'rejected') {
+        return response()->json([
+            'message' => "Your account was rejected. Reason: " . $user->rejection_reason
+        ], 403);
     }
+    if ($user->is_approved == false) {
+        return response()->json(['message' => 'Your account is pending approval.'], 403);
+    }
+}
 
     // If it is an ADMIN, they skip the check and login immediately.
 
@@ -145,6 +152,23 @@ public function approveUser($id)
         $user->is_approved = true;
         $user->save();
         return response()->json(['message' => 'User approved successfully!']);
+    }
+    return response()->json(['message' => 'User not found'], 404);
+}
+
+public function rejectUser(Request $request, $id)
+{
+    $request->validate([
+        'reason' => 'required|string|max:500'
+    ]);
+
+    $user = User::find($id);
+    if ($user) {
+        $user->status = 'rejected';
+        $user->is_approved = false;
+        $user->rejection_reason = $request->reason;
+        $user->save();
+        return response()->json(['message' => 'User rejected with reason.']);
     }
     return response()->json(['message' => 'User not found'], 404);
 }
