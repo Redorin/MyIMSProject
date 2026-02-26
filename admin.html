@@ -774,17 +774,20 @@ window.closeUiModal = function() {
                 const tbody = document.getElementById('spacesTableBody');
                 if (spaces && spaces.length > 0) {
                     tbody.innerHTML = spaces.map(space => `
-                        <tr>
-                            <td>${space.name}</td>
-                            <td>${space.occupancy} / ${space.capacity}</td>
-                            <td>${space.occupancy_percentage}%</td>
-                            <td>
-                                <button class="btn-sm btn-delete" onclick="deleteSpace(${space.id})">
-                                    <i class="fas fa-trash"></i> Delete
-                                </button>
-                            </td>
-                        </tr>
-                    `).join('');
+    <tr>
+        <td>${space.name}</td>
+        <td>${space.occupancy} / ${space.capacity}</td>
+        <td>${space.occupancy_percentage}%</td>
+        <td>
+            <button class="btn-sm btn-edit" onclick="editOccupancy(${space.id}, ${space.occupancy})">
+                <i class="fas fa-edit"></i> Edit
+            </button>
+            <button class="btn-sm btn-delete" onclick="deleteSpace(${space.id})">
+                <i class="fas fa-trash"></i> Delete
+            </button>
+        </td>
+    </tr>
+`).join('');
                 } else {
                     tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 1rem;">No spaces found</td></tr>';
                 }
@@ -792,6 +795,48 @@ window.closeUiModal = function() {
                 console.error('Error loading spaces:', error);
             }
         }
+
+        window.editOccupancy = function(id, currentVal) {
+    uiPrompt(`Current occupancy is ${currentVal}. Enter the new occupancy count:`, async (newVal) => {
+        const val = parseInt(newVal);
+        
+        // Basic validation
+        if (isNaN(val) || val < 0) {
+            uiAlert('Please enter a valid positive number.', 'Invalid Input');
+            return;
+        }
+
+        try {
+            const res = await fetch(`${API_URL}/spaces/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'Authorization': `Bearer ${AUTH_TOKEN}`
+                },
+                body: JSON.stringify({ occupancy: val })
+            });
+
+            if (res.ok) {
+                uiAlert('Occupancy updated successfully!', 'Success');
+                window.loadSpaces(); // Refresh the table
+                
+                // Optional: Notify other tabs if using BroadcastChannel
+                try {
+                    const spacesChannel = new BroadcastChannel('campus_spaces');
+                    spacesChannel.postMessage({ type: 'spaces_updated', timestamp: Date.now() });
+                    spacesChannel.close();
+                } catch(e) {}
+            } else {
+                const error = await res.json();
+                uiAlert(error.message || 'Failed to update occupancy.', 'Error');
+            }
+        } catch (error) {
+            console.error('Error updating occupancy:', error);
+            uiAlert('A server error occurred.');
+        }
+    });
+};
 
         // Load Users
         window.loadUsers = async function() {
