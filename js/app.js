@@ -211,6 +211,8 @@ saveBtns.forEach(btn => {
 
             const card = document.createElement('div');
             card.className = 'space-card';
+            card.style.cursor = 'pointer'; // Make it look clickable
+    card.onclick = () => window.openInfoBoard(space.id);
             card.innerHTML = `
                 <div class="space-image" style="background-image: ${image}"></div>
                 <div class="space-info">
@@ -508,4 +510,22 @@ window.disapproveUser = function(id) {
         }
     });
 };
+
+window.openInfoBoard = function(spaceId) {
+    const modal = document.getElementById('infoBoard');
+    modal.style.display = "block";
+    console.log("Opening info for space:", spaceId);
+};
+
+window.closeInfoBoard = function() {
+    document.getElementById('infoBoard').style.display = "none";
+};
+
+// Update existing window.onclick or add this
+window.addEventListener('click', (event) => {
+    const infoModal = document.getElementById('infoBoard');
+    if (event.target == infoModal) {
+        closeInfoBoard();
+    }
+});
 });
