@@ -1,6 +1,6 @@
 // --- 1. GLOBAL CONFIGURATION ---
 // this script only needs the spaces endpoint; the base API_URL is defined per-page
-const SPACES_API_URL = 'http://127.0.0.1:8000/api/spaces';
+const SPACES_API_URL = 'http://127.0.0.1:8001/api/spaces';
 
 // --- UTILITY FUNCTIONS ---
 // Logout function
@@ -97,7 +97,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (token) {
             try {
-                const resp = await fetch(`${window.API_URL||'http://127.0.0.1:8000/api'}/profile`, {
+                const resp = await fetch(`${window.API_URL||'http://127.0.0.1:8001/api'}/profile`, {
                     headers: {
                         'Accept': 'application/json',
                         'Authorization': 'Bearer ' + token
@@ -359,7 +359,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!tableBody) return; // Only run on Admin page or when section exists
 
         // show spinner row
-        tableBody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Loading…</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Loading…</td></tr>';
 
         const token = localStorage.getItem('auth_token');
         if (!token) {
@@ -369,7 +369,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-            const response = await fetch('http://127.0.0.1:8000/api/pending-users', {
+            const response = await fetch('http://127.0.0.1:8001/api/pending-users', {
                 headers: {
                     'Accept': 'application/json',
                     'Authorization': 'Bearer ' + token
@@ -381,7 +381,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (response.status === 401 || response.status === 403) {
                     alert('You must be logged in as admin to view pending users.');
                 }
-                tableBody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:red;">Error loading data</td></tr>';
+                tableBody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:red;">Error loading data</td></tr>';
                 return;
             }
 
@@ -391,7 +391,7 @@ document.addEventListener('DOMContentLoaded', () => {
             tableBody.innerHTML = ''; // Clear list
 
             if (users.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="4">No pending registrations.</td></tr>';
+                tableBody.innerHTML = '<tr><td colspan="5">No pending registrations.</td></tr>';
                 return;
             }
 
@@ -401,6 +401,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <td>${user.name}</td>
                         <td>${user.student_id}</td>
                         <td>${user.email}</td>
+                        <td>${user.student_id_image_url ? `<a href="${user.student_id_image_url}" target="_blank">View ID</a>` : 'n/a'}</td>
                         <td>
                             <button class="btn-action btn-plus" onclick="approveUser(${user.id})">
                                 Verify <i class="fas fa-check"></i>
@@ -416,7 +417,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             console.error("Error loading pending users:", error);
             alert('Error fetching pending users; check console.');
-            tableBody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:red;">Fetch error</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:red;">Fetch error</td></tr>';
         }
     };
 
@@ -430,7 +431,7 @@ window.approveUser = async function(id) {
         return;
     }
 
-    const resp = await fetch(`http://127.0.0.1:8000/api/approve-user/${id}`, {
+    const resp = await fetch(`http://127.0.0.1:8001/api/approve-user/${id}`, {
         method: 'PUT',
         headers: {
             'Accept': 'application/json',
@@ -453,7 +454,7 @@ window.disapproveUser = async function(id) {
     const token = localStorage.getItem('auth_token');
     if (!token) { alert('Not logged in.'); return; }
     try {
-        const resp = await fetch(`http://127.0.0.1:8000/api/admin/users/${id}`, {
+        const resp = await fetch(`http://127.0.0.1:8001/api/admin/users/${id}`, {
             method: 'DELETE',
             headers: {
                 'Accept': 'application/json',

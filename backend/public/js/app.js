@@ -1,6 +1,6 @@
 // Copied from project js/app.js
 
-const API_URL = 'http://127.0.0.1:8000/api/spaces';
+const API_URL = 'http://127.0.0.1:8001/api/spaces';
 
 // expose logout/navigate/modifyOccupancy for inline handlers
 window.logout = function() { localStorage.removeItem('user'); localStorage.removeItem('token'); sessionStorage.clear(); window.location.href = '/index.html'; };

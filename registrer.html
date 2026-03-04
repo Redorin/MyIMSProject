@@ -33,6 +33,11 @@
                 </div>
                 
                 <div class="input-group">
+                    <label>ID Card Image (front side)</label>
+                    <input type="file" id="regIdImage" accept="image/*" required>
+                </div>
+
+                <div class="input-group">
                     <label>Password</label>
                     <input type="password" id="regPassword" placeholder="Minimum 8 characters" required minlength="8">
                 </div>
@@ -49,7 +54,7 @@
     </div>
 
     <script>
-        const API_URL = 'http://127.0.0.1:8000/api';
+        const API_URL = 'http://127.0.0.1:8001/api';
 
         document.getElementById('registerForm').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -58,6 +63,7 @@
             const email = document.getElementById('regEmail').value;
             const studentId = document.getElementById('regStudentId').value;
             const password = document.getElementById('regPassword').value;
+            const idImageInput = document.getElementById('regIdImage');
             const msgBox = document.getElementById('regMessage');
 
             // simple client‑side pattern check before sending
@@ -69,22 +75,25 @@
                 return;
             }
 
+            if (idImageInput.files.length === 0) {
+                msgBox.style.display = 'block';
+                msgBox.style.color = 'red';
+                msgBox.innerText = 'Please upload an image of your ID card.';
+                return;
+            }
+
             try {
-                // Send data to Laravel Backend
+                // Send data to Laravel Backend using FormData because of file
+                const formData = new FormData();
+                formData.append('name', name);
+                formData.append('email', email);
+                formData.append('student_id', studentId);
+                formData.append('password', password);
+                formData.append('student_id_image', idImageInput.files[0]);
+
                 const response = await fetch(`${API_URL}/register`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify({ name, email, student_id: studentId, password })
-                });
-
-                const data = await response.json();
-
-                if (response.ok) {
-                    // SUCCESS! show pending message
-                    msgBox.style.display = 'block';
+                    body: formData
                     msgBox.style.color = 'green';
                     msgBox.innerText = data.message || 'Your account is pending approval.';
                     // do not log them in yet

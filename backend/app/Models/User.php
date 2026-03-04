@@ -22,6 +22,7 @@ class User extends Authenticatable
         'name',
         'email',
         'student_id',
+        'student_id_image', // path to uploaded ID image
         'phone',
         'preferences',
         'password',

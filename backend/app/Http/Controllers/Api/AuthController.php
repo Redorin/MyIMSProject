@@ -13,16 +13,28 @@ class AuthController extends Controller
     // 1. REGISTER (Create new user)
     public function register(Request $request)
 {
+    // validate incoming data, include unique rule for student_id so we don't hit a DB exception
     $validated = $request->validate([
         'name' => 'required|string|max:255',
-        'student_id' => 'required|string|max:20', // New Field
+        'student_id' => [
+            'required',
+            'string',
+            'max:20',
+            'regex:/^\d{2}-\d{4}-\d{3}$/', // must match ##-####-###
+            'unique:users,student_id'
+        ], // enforce uniqueness and format
         'email' => 'required|string|email|max:255|unique:users',
         'password' => 'required|string|min:8',
+        'student_id_image' => 'required|image|max:2048',
     ]);
+
+    // store the uploaded ID on the public disk
+    $path = $request->file('student_id_image')->store('student_ids','public');
 
     $user = User::create([
         'name' => $validated['name'],
         'student_id' => $validated['student_id'],
+        'student_id_image' => $path,
         'email' => $validated['email'],
         'password' => Hash::make($validated['password']),
         'role' => 'student', // Default role is student
@@ -30,8 +42,9 @@ class AuthController extends Controller
     ]);
 
     // Note: We DO NOT create a token here anymore.
+    // send back a consistent message that tests expect (and frontend can display)
     return response()->json([
-        'message' => 'Registration successful! Please wait for Admin approval before logging in.',
+        'message' => 'Account created successfully. Your account is pending approval by an administrator.',
     ], 201);
 }
 
@@ -124,8 +137,13 @@ class AuthController extends Controller
     // 4. GET PENDING USERS (For Admin Dashboard)
 public function pendingUsers()
 {
-    // Get all users who are NOT approved
-    $users = User::where('is_approved', false)->get();
+    // Get all users who are NOT approved, include ID image url
+    $users = User::where('is_approved', false)->get()->map(function($u) {
+        $u->student_id_image_url = $u->student_id_image
+            ? asset('storage/'.$u->student_id_image)
+            : null;
+        return $u;
+    });
     return response()->json($users);
 }
 
