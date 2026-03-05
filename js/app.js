@@ -418,41 +418,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // --- NEW FUNCTION: Approve User ---
 window.approveUser = async function(id) {
-    alert("Approve button clicked. (Static, no backend call)");
-};
-        if (!window.AUTH_TOKEN) {
-            alert('You are not logged in. Please log in first.');
-            return;
-        }
-        if (!confirm('Are you sure you want to approve this user?')) {
-            return;
-        }
-        try {
-            const res = await fetch(window.API_URL + '/approve-user/' + id, {
-                method: 'PUT',
-                headers: {
-                    'Authorization': 'Bearer ' + window.AUTH_TOKEN,
-                    'Content-Type': 'application/json'
-                }
-            });
-            if (res.ok) {
-                alert('User approved successfully!');
-                if (window.fetchPendingUsers) {
-                    window.fetchPendingUsers();
-                }
-            } else {
-                alert('Failed to approve user');
-            }
-        } catch (error) {
-            console.error('Error approving user:', error);
-            alert('Error approving user');
-        }
+    if (!confirm("Are you sure you want to approve this user?")) return;
+    alert('Approve button clicked (static, no backend call)');
 };
 
 // delete/disapprove pending user
 window.disapproveUser = async function(id) {
-    alert("Reject button clicked. (Static, no backend call)");
-}
+    if (!confirm("Reject this registration?")) return;
+    alert('Reject button clicked (static, no backend call)');
+};
+        window.fetchPendingUsers();
+    } catch(err) {
+        console.error('Error deleting pending user', err);
+        alert('Error rejecting user');
+    }
 };
 
 });

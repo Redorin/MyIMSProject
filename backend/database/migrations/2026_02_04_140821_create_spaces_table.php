@@ -14,11 +14,12 @@ return new class extends Migration
     Schema::create('spaces', function (Blueprint $table) {
         $table->id();
         $table->string('name');       // e.g., "Library"
-        $table->integer('occupancy'); // e.g., 15
+        $table->integer('occupancy')->default(0); // e.g., 15, default 0
         $table->integer('capacity');  // e.g., 100
-        $table->string('status');     // e.g., "low", "medium", "high"
+        $table->string('status')->default('low');     // e.g., "low", "medium", "high"
         $table->timestamps();
     });
+
 }
 
     /**

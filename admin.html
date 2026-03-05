@@ -991,7 +991,7 @@
                     tbody.innerHTML = users.map(user => {
                         let imgHtml = '';
                         if (user.image) {
-                            imgHtml = `<img src="${user.image}" alt="Profile" style="width:40px;height:40px;border-radius:50%;object-fit:cover;box-shadow:0 1px 4px #ccc;display:block;margin:auto;cursor:pointer;" onclick="window.zoomImage('${user.image}')">`;
+                            imgHtml = `<img src="${user.image}" alt="Profile" style="width:40px;height:40px;border-radius:50%;object-fit:cover;box-shadow:0 1px 4px #ccc;display:block;margin:auto;">`;
                         } else {
                             imgHtml = `<span style='color:#aaa;font-size:2rem;display:block;text-align:center;'><i class=\"fas fa-user-circle\"></i></span>`;
                         }
@@ -1012,21 +1012,6 @@
                         </tr>
                         `;
                     }).join('');
-                        // Add modal for image zoom if not present
-                        if (!document.getElementById('imageZoomModal')) {
-                            const modal = document.createElement('div');
-                            modal.id = 'imageZoomModal';
-                            modal.style = 'display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.7);z-index:9999;justify-content:center;align-items:center;';
-                            modal.innerHTML = `<div style='position:relative;max-width:90vw;max-height:90vh;'><img id='zoomedImg' src='' style='max-width:90vw;max-height:90vh;border-radius:10px;box-shadow:0 2px 12px #222;'><button onclick='window.closeZoom()' style='position:absolute;top:10px;right:10px;background:#fff;border:none;border-radius:50%;width:32px;height:32px;font-size:1.5rem;cursor:pointer;'>&times;</button></div>`;
-                            document.body.appendChild(modal);
-                        }
-                        window.zoomImage = function(src) {
-                            document.getElementById('zoomedImg').src = src;
-                            document.getElementById('imageZoomModal').style.display = 'flex';
-                        }
-                        window.closeZoom = function() {
-                            document.getElementById('imageZoomModal').style.display = 'none';
-                        }
                 } else {
                     tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 1rem;">No pending verifications</td></tr>';
                 }
@@ -1035,86 +1020,17 @@
             }
         }
 
-        // Approve User - SIMPLIFIED VERSION
+        // Approve User (static)
         window.approveUser = function(id) {
-            console.log('approveUser called with id:', id);
-
-            // Check auth token
-            if (!AUTH_TOKEN) {
-                alert('You are not logged in. Please log in first.');
-                return;
-            }
-
-            // Show confirmation
-            if (!confirm('Are you sure you want to approve this user?')) {
-                return;
-            }
-
-            // Make API call using promises instead of async/await
-            fetch(API_URL + '/approve-user/' + id, {
-                method: 'PUT',
-                headers: {
-                    'Authorization': 'Bearer ' + AUTH_TOKEN,
-                    'Content-Type': 'application/json'
-                }
-            })
-            .then(function(response) {
-                console.log('Approve response status:', response.status);
-                if (response.ok) {
-                    alert('User approved successfully!');
-                    if (window.fetchPendingUsers) {
-                        window.fetchPendingUsers();
-                    }
-                } else {
-                    alert('Failed to approve user');
-                }
-            })
-            .catch(function(error) {
-                console.error('Error approving user:', error);
-                alert('Error approving user: ' + error.message);
-            });
+            if (!confirm('Are you sure you want to approve this user?')) return;
+            alert('Approve button clicked (static, no backend call)');
         };
 
         // Reject User
-        window.rejectUser = async function(id) {
-            console.log('rejectUser called with id:', id);
-            
-            if (!AUTH_TOKEN) {
-                console.error('No auth token found! User might not be logged in.');
-                alert('You are not logged in. Please log in first.');
-                return;
-            }
-            
-            if (!confirm('Are you sure you want to reject this user? This action cannot be undone.')) {
-                console.log('User cancelled rejection');
-                return;
-            }
-            
-            console.log('Proceeding with rejection for user:', id);
-            
-            try {
-                const res = await fetch(`${API_URL}/admin/users/${id}`, {
-                    method: 'DELETE',
-                    headers: { 'Authorization': `Bearer ${AUTH_TOKEN}` }
-                });
-                
-                console.log('Reject response status:', res.status);
-                
-                if (res.ok) {
-                    const data = await res.json();
-                    console.log('Reject response data:', data);
-                    alert('User rejected and removed successfully!');
-                    window.fetchPendingUsers(); // Refresh the pending list
-                } else {
-                    const errorData = await res.text();
-                    console.error('Reject failed:', res.status, errorData);
-                    alert('Failed to reject user');
-                }
-            } catch (error) {
-                console.error('Error rejecting user:', error);
-                alert('Error rejecting user');
-            }
-        }
+        window.rejectUser = function(id) {
+            if (!confirm('Are you sure you want to reject this user?')) return;
+            alert('Reject button clicked (static, no backend call)');
+        };
 
         // Save Space
         document.getElementById('spaceForm').addEventListener('submit', async (e) => {

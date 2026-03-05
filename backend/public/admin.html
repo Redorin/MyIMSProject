@@ -482,22 +482,8 @@
             document.getElementById('editCapacityModal').classList.remove('active');
         };
 
-        // Custom modal for confirming space deletion
-        let spaceToDeleteId = null;
-        function openDeleteSpaceModal(id) {
-            spaceToDeleteId = id;
-            document.getElementById('deleteSpaceModal').classList.add('active');
-        }
-
-        function closeDeleteSpaceModal() {
-            spaceToDeleteId = null;
-            document.getElementById('deleteSpaceModal').classList.remove('active');
-        }
-
-        window.deleteSpace = async function() {
-            if (!spaceToDeleteId) return;
-            const id = spaceToDeleteId;
-            closeDeleteSpaceModal();
+        window.deleteSpace = async function(id) {
+            if (!confirm('Are you sure you want to delete this space?')) return;
             try {
                 const res = await fetch(`${API_URL}/admin/spaces/${id}`, {
                     method: 'DELETE',
@@ -511,7 +497,6 @@
                 }
             } catch (error) {
                 console.error('Error deleting space:', error);
-                alert('Error deleting space');
             }
         };
 
@@ -539,9 +524,20 @@
         };
 
         window.deleteUser = async function(id) {
-            if (confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
-                alert('Delete button clicked. (Static, no backend call)');
-            }
+            if (!confirm('Are you sure you want to delete this user?')) return;
+            try {
+                const res = await fetch(`${API_URL}/admin/users/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${AUTH_TOKEN}` }
+                });
+                if (res.ok) {
+                    alert('User deleted successfully!');
+                    window.loadUsers();
+                } else {
+                    alert('Failed to delete user');
+                }
+            } catch (error) {
+                console.error('Error deleting user:', error);
             }
         };
 
@@ -841,23 +837,7 @@
                                 <button class="btn-sm btn-edit" onclick="openEditCapacityModal(${space.id}, ${space.capacity})">
                                     <i class="fas fa-edit"></i> Edit Capacity
                                 </button>
-                                <button class="btn-sm btn-delete" onclick="openDeleteSpaceModal(${space.id})">
-                                            <!-- Delete Space Modal -->
-                                            <div id="deleteSpaceModal" class="modal">
-                                                <div class="modal-content">
-                                                    <div class="modal-header">
-                                                        Confirm Delete
-                                                        <button class="modal-close" onclick="closeDeleteSpaceModal()">&times;</button>
-                                                    </div>
-                                                    <div class="modal-body">
-                                                        Are you sure you want to delete this space? This action cannot be undone.
-                                                    </div>
-                                                    <div class="modal-footer" style="display: flex; gap: 1rem; justify-content: flex-end;">
-                                                        <button class="btn-sm" onclick="closeDeleteSpaceModal()">Cancel</button>
-                                                        <button class="btn-sm btn-delete" onclick="deleteSpace()">Delete</button>
-                                                    </div>
-                                                </div>
-                                            </div>
+                                <button class="btn-sm btn-delete" onclick="deleteSpace(${space.id})">
                                     <i class="fas fa-trash"></i> Delete
                                 </button>
                             </td>
@@ -1014,68 +994,17 @@
             }
         }
 
-        // Approve User - SIMPLIFIED VERSION
+        // Approve User (static)
         window.approveUser = function(id) {
-            console.log('approveUser called with id:', id);
-
-            // Check auth token
-            if (!AUTH_TOKEN) {
-                alert('You are not logged in. Please log in first.');
-                return;
-            }
-
-            // Show confirmation
-            if (!confirm('Are you sure you want to approve this user?')) {
-                return;
-            }
-
-            // Make API call using promises instead of async/await
-            fetch(API_URL + '/approve-user/' + id, {
-                method: 'PUT',
-                headers: {
-                    'Authorization': 'Bearer ' + AUTH_TOKEN,
-                    'Content-Type': 'application/json'
-                }
-            })
-            .then(function(response) {
-                console.log('Approve response status:', response.status);
-                if (response.ok) {
-                    alert('User approved successfully!');
-                    if (window.fetchPendingUsers) {
-                        window.fetchPendingUsers();
-                    }
-                } else {
-                    alert('Failed to approve user');
-                }
-            })
-            .catch(function(error) {
-                console.error('Error approving user:', error);
-                alert('Error approving user: ' + error.message);
-            });
+            if (!confirm('Are you sure you want to approve this user?')) return;
+            alert('Approve button clicked (static, no backend call)');
         };
 
-        // Reject User
-        window.rejectUser = async function(id) {
-            console.log('rejectUser called with id:', id);
-            
-            if (!AUTH_TOKEN) {
-                console.error('No auth token found! User might not be logged in.');
-                alert('You are not logged in. Please log in first.');
-                return;
-            }
-            
-            if (!confirm('Are you sure you want to reject this user? This action cannot be undone.')) {
-                console.log('User cancelled rejection');
-                return;
-            }
-            
-            console.log('Proceeding with rejection for user:', id);
-            
-            try {
-                const res = await fetch(`${API_URL}/admin/users/${id}`, {
-                    method: 'DELETE',
-                    headers: { 'Authorization': `Bearer ${AUTH_TOKEN}` }
-                });
+        // Reject User (static)
+        window.rejectUser = function(id) {
+            if (!confirm('Are you sure you want to reject this user?')) return;
+            alert('Reject button clicked (static, no backend call)');
+        };
                 
                 console.log('Reject response status:', res.status);
                 

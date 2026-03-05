@@ -10,12 +10,14 @@ class SpaceSeeder extends Seeder
 {
     public function run()
     {
+        // initial spaces; occupancy/status will default to 0/low if omitted
         $spaces = [
-            ['name' => 'University Library', 'occupancy' => 99, 'capacity' => 100, 'status' => 'low'],
-            ['name' => 'Main Canteen', 'occupancy' => 85, 'capacity' => 100, 'status' => 'high'],
-            ['name' => 'Student Center', 'occupancy' => 45, 'capacity' => 100, 'status' => 'medium'],
-            ['name' => 'Study Park', 'occupancy' => 5, 'capacity' => 50, 'status' => 'low'],
+            ['name' => 'University Library', 'capacity' => 100],
+            ['name' => 'Main Canteen', 'capacity' => 100],
+            ['name' => 'Student Center', 'capacity' => 100],
+            ['name' => 'Study Park', 'capacity' => 50],
         ];
+
 
         $usedCodes = [];
         foreach ($spaces as $space) {

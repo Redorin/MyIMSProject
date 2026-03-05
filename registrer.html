@@ -38,8 +38,8 @@
                 </div>
 
                 <div class="input-group">
-                    <label>Front Image ID <span style="color:red">*</span></label>
-                    <input type="file" id="regImage" accept="image/*" required>
+                    <label>Profile Image (optional)</label>
+                    <input type="file" id="regImage" accept="image/*">
                 </div>
                 
                 <button type="submit" class="btn-primary">Sign Up</button>
@@ -82,49 +82,35 @@
                 formData.append('email', email);
                 formData.append('student_id', studentId);
                 formData.append('password', password);
-                if (imageInput.files.length === 0) {
-                    msgBox.style.display = 'block';
-                    msgBox.style.color = 'red';
-                    msgBox.innerText = 'Front Image ID is required.';
-                    return;
+                if (imageInput.files.length > 0) {
+                    formData.append('image', imageInput.files[0]);
                 }
-                formData.append('image', imageInput.files[0]);
 
                 const response = await fetch(`${API_URL}/register`, {
                     method: 'POST',
-                    headers: { 'Accept': 'application/json' },
                     body: formData
                 });
 
-                let data = null;
-                try {
-                    data = await response.json();
-                } catch (parseErr) {
-                    console.error('Failed to parse JSON response:', parseErr);
-                    // if parsing fails, we'll still display a generic error
-                }
+                const data = await response.json();
 
                 if (response.ok) {
                     msgBox.style.display = 'block';
                     msgBox.style.color = 'green';
-                    msgBox.innerText = (data && data.message) ? data.message : 'Your account is pending approval.';
+                    msgBox.innerText = data.message || 'Your account is pending approval.';
                 } else {
                     msgBox.style.display = 'block';
                     msgBox.style.color = 'red';
-                    if (data && data.errors) {
+                    if (data.errors) {
                         const messages = Object.values(data.errors).flat().join(' ');
                         msgBox.innerText = messages;
-                    } else if (data && data.message) {
-                        msgBox.innerText = data.message;
                     } else {
-                        msgBox.innerText = `Registration failed (status ${response.status}).`;
+                        msgBox.innerText = data.message || 'Registration failed.';
                     }
                 }
             } catch (error) {
-                console.error('Error during registration request:', error);
+                console.error('Error:', error);
                 msgBox.style.display = 'block';
-                msgBox.style.color = 'red';
-                msgBox.innerText = `Server error during registration: ${error.message}`;
+                msgBox.innerText = 'Server error. Is the backend running?';
             }
         });
     </script>

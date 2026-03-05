@@ -79,17 +79,16 @@ class AdminController extends Controller
     {
         $this->ensureAdmin();
         $user = User::findOrFail($id);
-        $userName = $user->name;
-        $userEmail = $user->email;
-        $user->delete();
+        
         // Log the action
         ActivityLog::create([
             'user_id' => auth()->id(),
             'action' => 'deleted',
             'target_model' => 'User',
             'target_id' => $id,
-            'description' => "Deleted user: {$userName} ({$userEmail})"
+            'description' => "Deleted user: {$user->name} ({$user->email})"
         ]);
+
         return response()->json(['message' => 'User deleted successfully']);
     }
 
