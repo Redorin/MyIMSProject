@@ -14,33 +14,51 @@ class AuthController extends Controller
     public function register(Request $request)
 {
     // validate incoming data, include unique rule for student_id so we don't hit a DB exception
-    $validated = $request->validate([
-        'name' => 'required|string|max:255',
-        'student_id' => [
-            'required',
-            'string',
-            'max:20',
-            'regex:/^\d{2}-\d{4}-\d{3}$/', // must match ##-####-###
-            'unique:users,student_id'
-        ], // enforce uniqueness and format
-        'email' => 'required|string|email|max:255|unique:users',
-        'password' => 'required|string|min:8',
-    ]);
+    try {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'student_id' => [
+                'required',
+                'string',
+                'max:20',
+                'regex:/^\d{2}-\d{4}-\d{3}$/', // must match ##-####-###
+                'unique:users,student_id'
+            ], // enforce uniqueness and format
+            'email' => 'required|string|email|max:255|unique:users',
+            'password' => 'required|string|min:8',
+            'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ]);
+    } catch (\Illuminate\Validation\ValidationException $ve) {
+        // return validation errors with 422 status
+        return response()->json(['errors' => $ve->errors()], 422);
+    }
 
-    $user = User::create([
-        'name' => $validated['name'],
-        'student_id' => $validated['student_id'],
-        'email' => $validated['email'],
-        'password' => Hash::make($validated['password']),
-        'role' => 'student', // Default role is student
-        'is_approved' => false, // Explicitly set to false
-    ]);
+    try {
+        $imagePath = null;
+        if ($request->hasFile('image')) {
+            $imagePath = $request->file('image')->store('profile_images', 'public');
+        }
 
-    // Note: We DO NOT create a token here anymore.
-    // send back a consistent message that tests expect (and frontend can display)
-    return response()->json([
-        'message' => 'Account created successfully. Your account is pending approval by an administrator.',
-    ], 201);
+        $user = User::create([
+            'name' => $validated['name'],
+            'student_id' => $validated['student_id'],
+            'email' => $validated['email'],
+            'password' => Hash::make($validated['password']),
+            'role' => 'student', // Default role is student
+            'is_approved' => false, // Explicitly set to false
+            'image' => $imagePath,
+        ]);
+
+        return response()->json([
+            'message' => 'Account created successfully. Your account is pending approval by an administrator.',
+        ], 201);
+    } catch (\Exception $e) {
+        // unexpected error
+        return response()->json([
+            'message' => 'Server error during registration.',
+            'error' => $e->getMessage()
+        ], 500);
+    }
 }
 
     // 2. LOGIN (Check credentials)
@@ -139,6 +157,16 @@ public function pendingUsers()
 {
     // Get all users who are NOT approved
     $users = User::where('is_approved', false)->get();
+    // Map users to include only the required fields and full image URL
+    $users = $users->map(function ($user) {
+        return [
+            'id' => $user->id,
+            'name' => $user->name,
+            'student_id' => $user->student_id,
+            'email' => $user->email,
+            'image' => $user->image ? url('storage/' . $user->image) : null,
+        ];
+    });
     return response()->json($users);
 }
 
@@ -148,6 +176,7 @@ public function approveUser($id)
     $user = User::find($id);
     if ($user) {
         $user->is_approved = true;
+        $user->status = 'approved';
         $user->save();
         return response()->json(['message' => 'User approved successfully!']);
     }

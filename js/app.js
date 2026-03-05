@@ -173,7 +173,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         spaces.forEach(space => {
             const percentage = space.capacity ? Math.round((space.occupancy / space.capacity) * 100) : 0;
-            // prefer status column from DB if present
             let status = (space.status || '').toString().toLowerCase();
             if (!status) {
                 if (percentage >= 80) status = 'high';
@@ -182,16 +181,14 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const image = "url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 400 250%22><rect fill=%22%23cbd5e1%22 width=%22400%22 height=%22250%22/></svg>')";
-
-            // tags not present in DB by default
             const tagsHTML = '';
-
             const card = document.createElement('div');
             card.className = 'space-card';
             card.innerHTML = `
                 <div class="space-image" style="background-image: ${image}"></div>
                 <div class="space-info">
                     <h3>${space.name}</h3>
+                    <div style="font-size:0.95rem;color:#64748b;margin-bottom:0.5rem;">Space Code: <span style="font-weight:600;letter-spacing:2px;">${space.code || '----'}</span></div>
                     <p class="space-type">${space.type || ''}</p>
                     <div class="space-capacity">
                         <span class="capacity-number">${space.occupancy} / ${space.capacity}</span>
@@ -205,7 +202,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 </div>
             `;
-
             grid.appendChild(card);
         });
     }
@@ -422,54 +418,41 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // --- NEW FUNCTION: Approve User ---
 window.approveUser = async function(id) {
-    if(!confirm("Are you sure this is a real student?")) return;
-
-    const token = localStorage.getItem('auth_token');
-    if (!token) {
-        alert('You are not logged in.');
-        return;
-    }
-
-    const resp = await fetch(`http://127.0.0.1:8001/api/approve-user/${id}`, {
-        method: 'PUT',
-        headers: {
-            'Accept': 'application/json',
-            'Authorization': 'Bearer ' + token
+    alert("Approve button clicked. (Static, no backend call)");
+};
+        if (!window.AUTH_TOKEN) {
+            alert('You are not logged in. Please log in first.');
+            return;
         }
-    });
-
-    if (!resp.ok) {
-        alert('Failed to approve user');
-        return;
-    }
-    
-    alert("Student Verified!");
-    window.fetchPendingUsers(); // Refresh the list
+        if (!confirm('Are you sure you want to approve this user?')) {
+            return;
+        }
+        try {
+            const res = await fetch(window.API_URL + '/approve-user/' + id, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': 'Bearer ' + window.AUTH_TOKEN,
+                    'Content-Type': 'application/json'
+                }
+            });
+            if (res.ok) {
+                alert('User approved successfully!');
+                if (window.fetchPendingUsers) {
+                    window.fetchPendingUsers();
+                }
+            } else {
+                alert('Failed to approve user');
+            }
+        } catch (error) {
+            console.error('Error approving user:', error);
+            alert('Error approving user');
+        }
 };
 
 // delete/disapprove pending user
 window.disapproveUser = async function(id) {
-    if(!confirm("Reject this registration? This will remove the user account.")) return;
-    const token = localStorage.getItem('auth_token');
-    if (!token) { alert('Not logged in.'); return; }
-    try {
-        const resp = await fetch(`http://127.0.0.1:8001/api/admin/users/${id}`, {
-            method: 'DELETE',
-            headers: {
-                'Accept': 'application/json',
-                'Authorization': 'Bearer ' + token
-            }
-        });
-        if (!resp.ok) {
-            alert('Failed to reject user');
-            return;
-        }
-        alert('User registration rejected');
-        window.fetchPendingUsers();
-    } catch(err) {
-        console.error('Error deleting pending user', err);
-        alert('Error rejecting user');
-    }
+    alert("Reject button clicked. (Static, no backend call)");
+}
 };
 
 });

@@ -24,7 +24,7 @@ class AdminController extends Controller
     public function getUsers()
     {
         $this->ensureAdmin();
-        return response()->json(User::all());
+        return response()->json(User::where('is_approved', true)->get());
     }
 
     // Get users waiting for approval
@@ -79,16 +79,17 @@ class AdminController extends Controller
     {
         $this->ensureAdmin();
         $user = User::findOrFail($id);
-        
+        $userName = $user->name;
+        $userEmail = $user->email;
+        $user->delete();
         // Log the action
         ActivityLog::create([
             'user_id' => auth()->id(),
             'action' => 'deleted',
             'target_model' => 'User',
             'target_id' => $id,
-            'description' => "Deleted user: {$user->name} ({$user->email})"
+            'description' => "Deleted user: {$userName} ({$userEmail})"
         ]);
-
         return response()->json(['message' => 'User deleted successfully']);
     }
 

@@ -29,6 +29,7 @@ class User extends Authenticatable
         'role',
         'is_approved',
         'is_active',
+        'image', // profile image path
     ];
 
     /**
