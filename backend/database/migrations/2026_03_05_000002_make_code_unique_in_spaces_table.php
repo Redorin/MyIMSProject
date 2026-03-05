@@ -12,6 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('spaces', function (Blueprint $table) {
+            // if the code column doesn't exist yet, create it first
+            if (!Schema::hasColumn('spaces', 'code')) {
+                $table->string('code', 4)->nullable();
+            }
             $table->string('code', 4)->unique()->change();
         });
     }

@@ -9,6 +9,14 @@
     <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY"></script>
 </head>
 <body>
+    <script>
+        if (!window.navigate) {
+            window.navigate = function(page) { window.location.href = page; };
+        }
+        if (!window.logout) {
+            window.logout = function() { localStorage.removeItem('auth_token'); localStorage.removeItem('user_name'); localStorage.removeItem('user_email'); sessionStorage.clear(); window.location.href='index.html'; };
+        }
+    </script>
     <div class="dashboard-container">
         <!-- Sidebar -->
         <aside class="sidebar">
