@@ -30,17 +30,23 @@ class SpaceController extends Controller
 
     public function update(Request $request, $id)
     {
-        // 1. Find the space by ID
-        $space = \App\Models\Space::find($id);
+        // Find the space by ID
+        $space = Space::find($id);
 
-        if ($space) {
-            // 2. Update the number
-            $space->occupancy = $request->occupancy;
-            $space->save();
-
-            return response()->json($space);
+        if (!$space) {
+            return response()->json(['message' => 'Space not found'], 404);
         }
 
-        return response()->json(['message' => 'Space not found'], 404);
+        // Validate the request
+        $validated = $request->validate([
+            'name' => 'sometimes|required|string|max:255',
+            'capacity' => 'sometimes|required|integer|min:1',
+            'occupancy' => 'sometimes|required|integer|min:0',
+        ]);
+
+        // Update only the provided fields
+        $space->update($validated);
+
+        return response()->json($space);
     }
 }

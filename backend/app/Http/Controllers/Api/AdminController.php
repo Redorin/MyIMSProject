@@ -92,6 +92,32 @@ class AdminController extends Controller
         return response()->json(['message' => 'User deleted successfully']);
     }
 
+    // Toggle user account status (activate/deactivate)
+    public function toggleUserStatus($id)
+    {
+        $this->ensureAdmin();
+        $user = User::findOrFail($id);
+        
+        $user->is_active = !$user->is_active;
+        $user->save();
+
+        $action = $user->is_active ? 'activated' : 'deactivated';
+        
+        // Log the action
+        ActivityLog::create([
+            'user_id' => auth()->id(),
+            'action' => $action,
+            'target_model' => 'User',
+            'target_id' => $id,
+            'description' => ucfirst($action) . " user account: {$user->name} ({$user->email})"
+        ]);
+
+        return response()->json([
+            'message' => "User account {$action} successfully",
+            'user' => $user
+        ]);
+    }
+
     // Create a new space
     public function createSpace(Request $request)
     {

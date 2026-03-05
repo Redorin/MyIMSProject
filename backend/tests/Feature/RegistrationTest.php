@@ -13,16 +13,12 @@ class RegistrationTest extends TestCase
     /** @test */
     public function student_can_register_with_valid_student_id_and_remains_pending()
     {
-        // simulate an ID image file
-        $file = \Illuminate\Http\UploadedFile::fake()->image('id.jpg');
-
-        $response = $this->post('/api/register', [
+        $response = $this->postJson('/api/register', [
             'name' => 'New Student',
             'email' => 'newstudent@example.com',
             'student_id' => '12-3456-789',
             'password' => 'password123',
-            'student_id_image' => $file,
-        ], ['Accept' => 'application/json']);
+        ]);
 
         $response->assertStatus(201);
         $response->assertJson(['message' => 'Account created successfully. Your account is pending approval by an administrator.']);
@@ -70,7 +66,6 @@ class RegistrationTest extends TestCase
             'email' => 'bad@example.com',
             'student_id' => '123',
             'password' => 'password123',
-            // omit image to test validation automatically fails
         ]);
         $bad->assertStatus(422);
         $bad->assertJsonValidationErrors(['student_id']);

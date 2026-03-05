@@ -25,16 +25,11 @@ class AuthController extends Controller
         ], // enforce uniqueness and format
         'email' => 'required|string|email|max:255|unique:users',
         'password' => 'required|string|min:8',
-        'student_id_image' => 'required|image|max:2048',
     ]);
-
-    // store the uploaded ID on the public disk
-    $path = $request->file('student_id_image')->store('student_ids','public');
 
     $user = User::create([
         'name' => $validated['name'],
         'student_id' => $validated['student_id'],
-        'student_id_image' => $path,
         'email' => $validated['email'],
         'password' => Hash::make($validated['password']),
         'role' => 'student', // Default role is student
@@ -60,6 +55,11 @@ class AuthController extends Controller
 
     if (!$user || !Hash::check($request->password, $user->password)) {
         return response()->json(['message' => 'Invalid login credentials'], 401);
+    }
+
+    // Check if account is active
+    if (!$user->is_active) {
+        return response()->json(['message' => 'Your account has been deactivated. Please contact an administrator.'], 403);
     }
 
     // --- NEW LOGIC: SEPARATE ADMIN VS STUDENT ---
@@ -137,13 +137,8 @@ class AuthController extends Controller
     // 4. GET PENDING USERS (For Admin Dashboard)
 public function pendingUsers()
 {
-    // Get all users who are NOT approved, include ID image url
-    $users = User::where('is_approved', false)->get()->map(function($u) {
-        $u->student_id_image_url = $u->student_id_image
-            ? asset('storage/'.$u->student_id_image)
-            : null;
-        return $u;
-    });
+    // Get all users who are NOT approved
+    $users = User::where('is_approved', false)->get();
     return response()->json($users);
 }
 

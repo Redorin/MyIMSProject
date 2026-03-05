@@ -359,7 +359,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!tableBody) return; // Only run on Admin page or when section exists
 
         // show spinner row
-        tableBody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Loading…</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Loading…</td></tr>';
 
         const token = localStorage.getItem('auth_token');
         if (!token) {
@@ -381,7 +381,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (response.status === 401 || response.status === 403) {
                     alert('You must be logged in as admin to view pending users.');
                 }
-                tableBody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:red;">Error loading data</td></tr>';
+                tableBody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:red;">Error loading data</td></tr>';
                 return;
             }
 
@@ -391,7 +391,7 @@ document.addEventListener('DOMContentLoaded', () => {
             tableBody.innerHTML = ''; // Clear list
 
             if (users.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="5">No pending registrations.</td></tr>';
+                tableBody.innerHTML = '<tr><td colspan="4">No pending registrations.</td></tr>';
                 return;
             }
 
@@ -401,7 +401,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         <td>${user.name}</td>
                         <td>${user.student_id}</td>
                         <td>${user.email}</td>
-                        <td>${user.student_id_image_url ? `<a href="${user.student_id_image_url}" target="_blank">View ID</a>` : 'n/a'}</td>
                         <td>
                             <button class="btn-action btn-plus" onclick="approveUser(${user.id})">
                                 Verify <i class="fas fa-check"></i>
@@ -417,7 +416,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             console.error("Error loading pending users:", error);
             alert('Error fetching pending users; check console.');
-            tableBody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:red;">Fetch error</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:red;">Fetch error</td></tr>';
         }
     };
 

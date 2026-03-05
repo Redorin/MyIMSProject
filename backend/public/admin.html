@@ -163,6 +163,20 @@
             background-color: #f8fafc;
         }
 
+        /* highlight pending rows */
+        .pending-row {
+            background-color: #fef3c7 !important;
+        }
+
+        .pending-row td {
+            border-left: 4px solid #f59e0b;
+        }
+
+        .pending-row td:first-child {
+            font-weight: 600;
+            color: #92400e;
+        }
+
         .btn-sm {
             padding: 0.5rem 0.75rem;
             font-size: 0.85rem;
@@ -312,6 +326,101 @@
             color: #64748b;
         }
 
+        .users-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .user-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            border: 1px solid #e2e8f0;
+        }
+
+        .user-card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .user-card-header {
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .user-card-name {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--dark);
+            margin: 0 0 0.25rem 0;
+            word-break: break-word;
+        }
+
+        .user-card-email {
+            font-size: 0.9rem;
+            color: #64748b;
+            margin: 0;
+            word-break: break-word;
+        }
+
+        .user-card-body {
+            margin-bottom: 1rem;
+        }
+
+        .user-card-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+            color: #64748b;
+        }
+
+        .user-card-label {
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .user-card-footer {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: flex-end;
+        }
+
+        .users-grid-empty {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 2rem;
+            color: #64748b;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-active {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+
+        .status-inactive {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+
         @media (max-width: 768px) {
             .admin-sidebar {
                 width: 100%;
@@ -344,11 +453,12 @@
             document.getElementById(section).classList.add('active');
             document.querySelectorAll('.admin-nav-item').forEach(el => el.classList.remove('active'));
             button.classList.add('active');
-            const titles = { 'dashboard': 'Dashboard', 'spaces': 'Manage Spaces', 'users': 'Manage Users', 'activity': 'Activity Logs' };
+            const titles = { 'dashboard': 'Dashboard', 'spaces': 'Manage Spaces', 'users': 'Manage Users', 'pending': 'Pending Verifications', 'activity': 'Activity Logs' };
             document.getElementById('sectionTitle').textContent = titles[section];
             if (section === 'dashboard') window.loadDashboard();
             if (section === 'spaces') window.loadSpaces();
             if (section === 'users') window.loadUsers();
+            if (section === 'pending') window.fetchPendingUsers();
             if (section === 'activity') window.loadActivityLogs();
         };
 
@@ -360,6 +470,16 @@
 
         window.closeSpaceModal = function() {
             document.getElementById('spaceModal').classList.remove('active');
+        };
+
+        window.openEditCapacityModal = function(spaceId, currentCapacity) {
+            document.getElementById('newCapacity').value = currentCapacity;
+            document.getElementById('editCapacityModal').classList.add('active');
+            document.getElementById('editCapacityModal').dataset.spaceId = spaceId;
+        };
+
+        window.closeEditCapacityModal = function() {
+            document.getElementById('editCapacityModal').classList.remove('active');
         };
 
         window.deleteSpace = async function(id) {
@@ -377,6 +497,29 @@
                 }
             } catch (error) {
                 console.error('Error deleting space:', error);
+            }
+        };
+
+        window.toggleUserStatus = async function(id) {
+            try {
+                const res = await fetch(`${API_URL}/admin/users/${id}/toggle-status`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${AUTH_TOKEN}`
+                    }
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    alert(data.message);
+                    window.loadUsers();
+                } else {
+                    alert('Failed to toggle user status');
+                }
+            } catch (error) {
+                console.error('Error toggling user status:', error);
+                alert('Error toggling user status');
             }
         };
 
@@ -419,6 +562,9 @@
                 </button>
                 <button class="admin-nav-item" onclick="switchSection('users', this)">
                     <i class="fas fa-users"></i> Users
+                </button>
+                <button class="admin-nav-item" onclick="switchSection('pending', this)">
+                    <i class="fas fa-hourglass-half"></i> Pending
                 </button>
                 <button class="admin-nav-item" onclick="switchSection('activity', this)">
                     <i class="fas fa-history"></i> Activity Logs
@@ -490,17 +636,51 @@
             <div id="users" class="admin-section">
                 <div class="admin-table-container">
                     <h3>All Users</h3>
+                    <div id="usersGrid" class="users-grid">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pending Verifications Section -->
+            <div id="pending" class="admin-section">
+                <div class="admin-table-container">
+                    <h3>⏳ Pending Student Verifications</h3>
+                    <table class="admin-table" id="pendingTable">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Student ID</th>
+                                <th>Email</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pendingUsersTable"></tbody>
+                    </table>
+                </div>
+
+                <!-- Rejected Users Table -->
+                <div class="admin-table-container" style="margin-top: 30px;">
+                    <h3>❌ Rejected Users</h3>
                     <table class="admin-table">
                         <thead>
                             <tr>
                                 <th>Name</th>
+                                <th>Student ID</th>
                                 <th>Email</th>
-                                <th>Created At</th>
+                                <th>Phone</th>
+                                <th>Rejected Date</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
-                        <tbody id="usersTableBody">
-                            <!-- Populated by JS -->
+                        <tbody id="rejectedUsersTable">
+                            <!-- This will be populated with rejected users data -->
+                            <tr>
+                                <td colspan="6" style="text-align: center; padding: 2rem; color: #666;">
+                                    <i class="fas fa-user-times" style="font-size: 2rem; margin-bottom: 10px; display: block;"></i>
+                                    No rejected users yet
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -538,6 +718,26 @@
                 <div class="modal-footer">
                     <button type="button" class="btn-secondary" onclick="closeSpaceModal()">Cancel</button>
                     <button type="submit" class="btn-primary">Save Space</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Capacity Modal -->
+    <div id="editCapacityModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span>Edit Maximum Occupancy</span>
+                <button class="modal-close" onclick="closeEditCapacityModal()">&times;</button>
+            </div>
+            <form class="modal-form" id="editCapacityForm">
+                <div class="form-group">
+                    <label>New Maximum Capacity</label>
+                    <input type="number" id="newCapacity" min="1" required>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary" onclick="closeEditCapacityModal()">Cancel</button>
+                    <button type="submit" class="btn-primary">Update Capacity</button>
                 </div>
             </form>
         </div>
@@ -634,6 +834,9 @@
                             <td>${space.occupancy} / ${space.capacity}</td>
                             <td>${space.occupancy_percentage}%</td>
                             <td>
+                                <button class="btn-sm btn-edit" onclick="openEditCapacityModal(${space.id}, ${space.capacity})">
+                                    <i class="fas fa-edit"></i> Edit Capacity
+                                </button>
                                 <button class="btn-sm btn-delete" onclick="deleteSpace(${space.id})">
                                     <i class="fas fa-trash"></i> Delete
                                 </button>
@@ -663,22 +866,42 @@
                 const users = await res.json();
                 console.log('Users loaded:', users);
 
-                const tbody = document.getElementById('usersTableBody');
+                const usersGrid = document.getElementById('usersGrid');
                 if (users && users.length > 0) {
-                    tbody.innerHTML = users.map(user => `
-                        <tr>
-                            <td>${user.name}</td>
-                            <td>${user.email}</td>
-                            <td>${new Date(user.created_at).toLocaleDateString()}</td>
-                            <td>
+                    usersGrid.innerHTML = users.map(user => `
+                        <div class="user-card">
+                            <div class="user-card-header">
+                                <p class="user-card-name">${user.name}</p>
+                                <p class="user-card-email">${user.email}</p>
+                            </div>
+                            <div class="user-card-body">
+                                <div class="user-card-row">
+                                    <span class="user-card-label">Role:</span>
+                                    <span>${user.role || 'User'}</span>
+                                </div>
+                                <div class="user-card-row">
+                                    <span class="user-card-label">Joined:</span>
+                                    <span>${new Date(user.created_at).toLocaleDateString()}</span>
+                                </div>
+                                <div class="user-card-row">
+                                    <span class="user-card-label">Account:</span>
+                                    <span class="status-badge ${user.is_active ? 'status-active' : 'status-inactive'}">
+                                        ${user.is_active ? 'Active' : 'Inactive'}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="user-card-footer">
+                                <button class="btn-sm ${user.is_active ? 'btn-delete' : 'btn-edit'}" onclick="toggleUserStatus(${user.id})">
+                                    <i class="fas ${user.is_active ? 'fa-ban' : 'fa-check'}"></i> ${user.is_active ? 'Deactivate' : 'Activate'}
+                                </button>
                                 <button class="btn-sm btn-delete" onclick="deleteUser(${user.id})">
                                     <i class="fas fa-trash"></i> Delete
                                 </button>
-                            </td>
-                        </tr>
+                            </div>
+                        </div>
                     `).join('');
                 } else {
-                    tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 1rem;">No users found</td></tr>';
+                    usersGrid.innerHTML = '<div class="users-grid-empty">No users found</div>';
                 }
             } catch (error) {
                 console.error('Error loading users:', error);
@@ -714,6 +937,141 @@
                 }
             } catch (error) {
                 console.error('Error loading activity logs:', error);
+            }
+        }
+
+        // Load Pending Users
+        window.fetchPendingUsers = async function() {
+            console.log('fetchPendingUsers called');
+            console.log('API_URL:', API_URL);
+            console.log('AUTH_TOKEN:', AUTH_TOKEN);
+            
+            if (!AUTH_TOKEN) {
+                console.error('No auth token found! User might not be logged in.');
+                alert('You are not logged in. Please log in first.');
+                return;
+            }
+            
+            try {
+                const res = await fetch(`${API_URL}/pending-users`, {
+                    headers: { 'Authorization': `Bearer ${AUTH_TOKEN}` }
+                });
+                
+                console.log('Pending users response status:', res.status);
+                
+                if (!res.ok) {
+                    console.error('Pending users response not ok:', res.status);
+                    return;
+                }
+                
+                const users = await res.json();
+                console.log('Pending users loaded:', users);
+
+                const tbody = document.getElementById('pendingUsersTable');
+                console.log('tbody element:', tbody);
+                
+                if (users && users.length > 0) {
+                    tbody.innerHTML = users.map(user => `
+                        <tr class="pending-row">
+                            <td>${user.name}</td>
+                            <td>${user.student_id || 'N/A'}</td>
+                            <td>${user.email}</td>
+                            <td>
+                                <button class="btn-sm btn-edit" onclick="window.approveUser(${user.id})">
+                                    <i class="fas fa-check"></i> Approve
+                                </button>
+                                <button class="btn-sm btn-delete" onclick="window.rejectUser(${user.id})">
+                                    <i class="fas fa-times"></i> Reject
+                                </button>
+                            </td>
+                        </tr>
+                    `).join('');
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 1rem;">No pending verifications</td></tr>';
+                }
+            } catch (error) {
+                console.error('Error loading pending users:', error);
+            }
+        }
+
+        // Approve User - SIMPLIFIED VERSION
+        window.approveUser = function(id) {
+            console.log('approveUser called with id:', id);
+
+            // Check auth token
+            if (!AUTH_TOKEN) {
+                alert('You are not logged in. Please log in first.');
+                return;
+            }
+
+            // Show confirmation
+            if (!confirm('Are you sure you want to approve this user?')) {
+                return;
+            }
+
+            // Make API call using promises instead of async/await
+            fetch(API_URL + '/approve-user/' + id, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': 'Bearer ' + AUTH_TOKEN,
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(function(response) {
+                console.log('Approve response status:', response.status);
+                if (response.ok) {
+                    alert('User approved successfully!');
+                    if (window.fetchPendingUsers) {
+                        window.fetchPendingUsers();
+                    }
+                } else {
+                    alert('Failed to approve user');
+                }
+            })
+            .catch(function(error) {
+                console.error('Error approving user:', error);
+                alert('Error approving user: ' + error.message);
+            });
+        };
+
+        // Reject User
+        window.rejectUser = async function(id) {
+            console.log('rejectUser called with id:', id);
+            
+            if (!AUTH_TOKEN) {
+                console.error('No auth token found! User might not be logged in.');
+                alert('You are not logged in. Please log in first.');
+                return;
+            }
+            
+            if (!confirm('Are you sure you want to reject this user? This action cannot be undone.')) {
+                console.log('User cancelled rejection');
+                return;
+            }
+            
+            console.log('Proceeding with rejection for user:', id);
+            
+            try {
+                const res = await fetch(`${API_URL}/admin/users/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${AUTH_TOKEN}` }
+                });
+                
+                console.log('Reject response status:', res.status);
+                
+                if (res.ok) {
+                    const data = await res.json();
+                    console.log('Reject response data:', data);
+                    alert('User rejected and removed successfully!');
+                    window.fetchPendingUsers(); // Refresh the pending list
+                } else {
+                    const errorData = await res.text();
+                    console.error('Reject failed:', res.status, errorData);
+                    alert('Failed to reject user');
+                }
+            } catch (error) {
+                console.error('Error rejecting user:', error);
+                alert('Error rejecting user');
             }
         }
 
@@ -753,6 +1111,44 @@
                 }
             } catch (error) {
                 console.error('Error creating space:', error);
+            }
+        });
+
+        // Edit Capacity Form Handler
+        document.getElementById('editCapacityForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const spaceId = document.getElementById('editCapacityModal').dataset.spaceId;
+            const newCapacity = parseInt(document.getElementById('newCapacity').value);
+
+            console.log('Updating space:', spaceId, 'to capacity:', newCapacity);
+
+            try {
+                const res = await fetch(`${API_URL}/spaces/${spaceId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${AUTH_TOKEN}`
+                    },
+                    body: JSON.stringify({ capacity: newCapacity })
+                });
+
+                console.log('Response status:', res.status, 'ok:', res.ok);
+
+                if (res.ok) {
+                    const data = await res.json();
+                    console.log('Updated space data:', data);
+                    alert('Capacity updated successfully!');
+                    document.getElementById('editCapacityModal').classList.remove('active');
+                    window.loadSpaces();
+                } else {
+                    const error = await res.json();
+                    console.error('Error response:', error);
+                    alert('Failed to update capacity: ' + (error.message || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error updating capacity:', error);
+                alert('Error updating capacity: ' + error.message);
             }
         });
 

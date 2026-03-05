@@ -22,13 +22,13 @@ class User extends Authenticatable
         'name',
         'email',
         'student_id',
-        'student_id_image', // path to uploaded ID image
         'phone',
         'preferences',
         'password',
         'status', // pending/approved/rejected
         'role',
         'is_approved',
+        'is_active',
     ];
 
     /**
@@ -52,5 +52,6 @@ class User extends Authenticatable
         'preferences' => 'array',
         'status' => 'string',
         'is_approved' => 'boolean',
+        'is_active' => 'boolean',
     ];
 }
